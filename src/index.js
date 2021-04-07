@@ -95,7 +95,7 @@ client.on('messageReactionAdd', (reaction, user) => {
     .remove(user)
     .then(() => guild.members.fetch(user.id))
     .then(member => member.roles.add(role))
-    .catch(reason => message.reply(reason))
+    .catch(console.error)
 })
 
 client.login().catch(console.error)
