@@ -3,14 +3,16 @@ const { interactiveSetup } = require('./interactive')
 
 const client = new Client({
   ws: {
-    intents: Intents.NON_PRIVILEGED & ~(Intents.FLAGS.DIRECT_MESSAGES | Intents.FLAGS.GUILD_MESSAGE_TYPING),
+    intents:
+      Intents.NON_PRIVILEGED &
+      ~(Intents.FLAGS.DIRECT_MESSAGES | Intents.FLAGS.GUILD_MESSAGE_TYPING),
   },
   presence: {
     activity: {
       name: 'ガイドライン',
-      type: 'WATCHING'
-    }
-  }
+      type: 'WATCHING',
+    },
+  },
 })
 
 client.once('ready', () => {
@@ -20,7 +22,10 @@ client.once('ready', () => {
     Promise.all(
       guild.channels.cache
         .filter(channel => channel.type === 'text')
-        .filter(channel => channel.topic && /\[guideline (\d{17,19})\]/u.test(channel.topic))
+        .filter(
+          channel =>
+            channel.topic && /\[guideline (\d{17,19})\]/u.test(channel.topic)
+        )
         .map(channel => channel.messages.fetch())
     )
   )
