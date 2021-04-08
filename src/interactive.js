@@ -11,7 +11,7 @@ async function* interactiveGenerator(message) {
       'ガイドラインに同意するまで使用させたくないカテゴリチャンネルのIDを選択してください'
     )
     .then(message =>
-      message.reply(
+      message.channel.send(
         `${categoryChannels
           .map(channel => `${channel}（${channel.id}）`)
           .join(
