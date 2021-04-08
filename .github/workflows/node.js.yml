@@ -2,18 +2,18 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js v15.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: v15.x
-    - run: npm ci
-    - run: npm run check
+      - uses: actions/checkout@v2
+      - name: Use Node.js v15.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: v15.x
+      - run: npm ci
+      - run: npm run check
