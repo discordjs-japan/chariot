@@ -1,7 +1,7 @@
 /**
  * @param {import('discord.js').Message} message
  */
-async function* interactiveGenerator(message) {
+async function* interactiveSetup(message) {
   const categoryChannels = message.guild.channels.cache.filter(
     channel => channel.type === 'category'
   )
@@ -91,4 +91,4 @@ async function* interactiveGenerator(message) {
   yield guidelineMessage
 }
 
-module.exports.interactiveGenerator = interactiveGenerator
+module.exports.interactiveSetup = interactiveSetup

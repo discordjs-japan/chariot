@@ -1,5 +1,5 @@
 const { Client, Intents } = require('discord.js')
-const { interactiveGenerator } = require('./interactive')
+const { interactiveSetup } = require('./interactive')
 
 const client = new Client({
   ws: {
@@ -33,7 +33,7 @@ client.on('message', async message => {
   if (!message.content.includes('setup')) return
   if (message.member.manageable) return
 
-  const interactive = interactiveGenerator(message)
+  const interactive = interactiveSetup(message)
   /** @type {import('discord.js').CategoryChannel} */
   const categoryChannel = (await interactive.next()).value
 
