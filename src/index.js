@@ -3,8 +3,14 @@ const { interactiveGenerator } = require('./interactive')
 
 const client = new Client({
   ws: {
-    intents: Intents.NON_PRIVILEGED,
+    intents: Intents.NON_PRIVILEGED & ~(Intents.FLAGS.DIRECT_MESSAGES | Intents.FLAGS.GUILD_MESSAGE_TYPING),
   },
+  presence: {
+    activity: {
+      name: 'ガイドライン',
+      type: 'WATCHING'
+    }
+  }
 })
 
 client.once('ready', () => {
