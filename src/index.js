@@ -20,6 +20,7 @@ client.once('ready', () => {
     Promise.all(
       guild.channels.cache
         .filter(channel => channel.type === 'text')
+        .filter(channel => channel.topic && /\[guideline (\d{17,19})\]/u.test(channel.topic))
         .map(channel => channel.messages.fetch())
     )
   )
@@ -90,7 +91,7 @@ client.on('messageReactionAdd', (reaction, user) => {
   if (!guild || user.bot) return
   if (channel.type !== 'text') return
   if (reaction.emoji.name !== '✅') return
-  const topicGuidelineId = channel.topic.match(/\[guideline (\d{17,19})\]/u)
+  const topicGuidelineId = channel.topic?.match(/\[guideline (\d{17,19})\]/u)
   if (topicGuidelineId && topicGuidelineId[1] !== message.id) return
   const role = guild.roles.cache.find(
     role => role.name === `Read the Guideline [${channel.parentID}]`
