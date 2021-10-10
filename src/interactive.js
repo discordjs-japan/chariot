@@ -3,7 +3,7 @@
  */
 async function* interactiveSetup(message) {
   const categoryChannels = message.guild.channels.cache.filter(
-    channel => channel.type === 'category'
+    channel => channel.type === 'GUILD_CATEGORY'
   )
 
   await message
@@ -22,18 +22,16 @@ async function* interactiveSetup(message) {
 
   /** @type {import('discord.js').CategoryChannel} */
   const categoryChannel = await message.channel
-    .awaitMessages(
-      msg =>
+    .awaitMessages({
+      filter: msg =>
         msg.author.id === message.author.id &&
         categoryChannels.some(
           channel => channel.id === msg.content || channel.name === msg.content
         ),
-      {
-        max: 1,
-        idle: 60000,
-        errors: ['idle'],
-      }
-    )
+      max: 1,
+      idle: 60000,
+      errors: ['idle'],
+    })
     .then(collection => collection.first())
     .then(message =>
       categoryChannels.find(
@@ -52,20 +50,17 @@ async function* interactiveSetup(message) {
 
   /** @type {import('discord.js').TextChannel} */
   const guidelineChannel = await message.channel
-    .awaitMessages(
-      msg =>
+    .awaitMessages({
+      filter: msg =>
         msg.author.id === message.author.id &&
         children.some(
           channel =>
-            channel.type === 'text' &&
-            channel.id === msg.mentions.channels.firstKey()
+            channel.isText() && channel.id === msg.mentions.channels.firstKey()
         ),
-      {
-        errors: ['idle'],
-        idle: 60000,
-        max: 1,
-      }
-    )
+      errors: ['idle'],
+      idle: 60000,
+      max: 1,
+    })
     .then(collection => collection.first())
     .then(message => message.mentions.channels.first())
 
@@ -76,15 +71,13 @@ async function* interactiveSetup(message) {
   )
 
   const guidelineMessage = await message.channel
-    .awaitMessages(
-      msg =>
+    .awaitMessages({
+      filter: msg =>
         msg.author.id === message.author.id && /^\d{17,19}$/.test(msg.content),
-      {
-        idle: 60000,
-        errors: ['idle'],
-        max: 1,
-      }
-    )
+      idle: 60000,
+      errors: ['idle'],
+      max: 1,
+    })
     .then(collection => collection.first())
     .then(message => guidelineChannel.messages.fetch(message.content))
 
