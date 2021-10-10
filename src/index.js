@@ -1,42 +1,51 @@
-const { Client, Intents } = require('discord.js')
+const { Client } = require('discord.js')
 const { interactiveSetup } = require('./interactive')
 
 const client = new Client({
-  ws: {
-    intents:
-      Intents.NON_PRIVILEGED &
-      ~(Intents.FLAGS.DIRECT_MESSAGES | Intents.FLAGS.GUILD_MESSAGE_TYPING),
-  },
+  intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS'],
   presence: {
-    activity: {
-      name: 'ガイドライン',
-      type: 'WATCHING',
-    },
+    status: 'idle',
+    activities: [
+      {
+        type: 'WATCHING',
+        name: 'ガイドライン',
+      },
+    ],
   },
 })
 
-client.once('ready', () => {
+client.once('ready', client => {
   console.log('Ready!')
 
-  client.guilds.cache.forEach(guild =>
-    Promise.all(
-      guild.channels.cache
-        .filter(channel => channel.type === 'text')
-        .filter(
-          channel =>
-            channel.topic && /\[guideline (\d{17,19})\]/u.test(channel.topic)
-        )
-        .map(channel => channel.messages.fetch())
+  /**
+   * @param {import('discord.js').GuildChannel} channel
+   * @returns
+   */
+  const fetchGuidelineChannel = async channel => {
+    if (!channel.isText()) return
+    if (!channel.topic) return
+    if (!/\[guideline (\d{17,19})\]/u.test(channel.topic)) return
+
+    return channel.messages.fetch()
+  }
+
+  client.guilds
+    .fetch()
+    .then(guilds => Promise.all(guilds.map(guild => guild.fetch())))
+    .then(guilds => guilds.map(guild => guild.channels.cache))
+    .then(channels => channels.reduce((prev, current) => prev.concat(current)))
+    .then(channels =>
+      Promise.all(channels.map(channel => fetchGuidelineChannel(channel)))
     )
-  )
+    .catch(console.error)
 })
 
-client.on('message', async message => {
+client.on('messageCreate', async message => {
   if (message.system || message.author.bot) return
   if (!message.guild) return
   if (!message.mentions.members.has(client.user.id)) return
   if (!message.content.includes('setup')) return
-  if (message.member.manageable) return
+  if (message.member.id !== message.guild.ownerId) return
 
   const interactive = interactiveSetup(message)
   /** @type {import('discord.js').CategoryChannel} */
@@ -62,27 +71,35 @@ client.on('message', async message => {
   )
 
   const role = await message.guild.roles.create({
-    data: {
-      color: 'RANDOM',
-      name: `Read the Guideline [${categoryChannel.id}]`,
-      permissions: message.guild.roles.everyone.permissions,
-    },
+    color: 'RANDOM',
+    name: `Read the Guideline [${categoryChannel.id}]`,
+    permissions: message.guild.roles.everyone.permissions,
     reason: `${guidelineChannel}に同意した人に与えるための役職`,
   })
 
-  await categoryChannel.updateOverwrite(message.guild.roles.everyone, {
-    VIEW_CHANNEL: false,
-  })
-  await categoryChannel.updateOverwrite(role, { VIEW_CHANNEL: true })
-  await guidelineChannel.updateOverwrite(message.guild.roles.everyone, {
-    ADD_REACTIONS: false,
+  await categoryChannel.permissionOverwrites.edit(
+    message.guild.roles.everyone,
+    {
+      VIEW_CHANNEL: false,
+    }
+  )
+  await categoryChannel.permissionOverwrites.create(role, {
     VIEW_CHANNEL: true,
   })
+  await guidelineChannel.permissionOverwrites.edit(
+    message.guild.roles.everyone,
+    {
+      ADD_REACTIONS: false,
+      VIEW_CHANNEL: true,
+    }
+  )
   await guidelineMessage.react('✅')
   await Promise.all(
     categoryChannel.children
       .filter(channel => channel.id !== guidelineChannel.id)
-      .map(channel => channel.updateOverwrite(role, { VIEW_CHANNEL: true }))
+      .map(channel =>
+        channel.permissionOverwrites.create(role, { VIEW_CHANNEL: true })
+      )
   )
 
   await message.reply('セットアップが完了しました！')
@@ -92,22 +109,27 @@ client.on('messageReactionAdd', (reaction, user) => {
   const message = reaction.message
   const channel = message.channel
   const guild = message.guild
+  const topicGuidelineId = channel?.topic?.match(/\[guideline (\d{17,19})\]/u)
 
   if (!guild || user.bot) return
-  if (channel.type !== 'text') return
+  if (!channel.isText()) return
   if (reaction.emoji.name !== '✅') return
-  const topicGuidelineId = channel.topic?.match(/\[guideline (\d{17,19})\]/u)
-  if (topicGuidelineId && topicGuidelineId[1] !== message.id) return
-  const role = guild.roles.cache.find(
-    role => role.name === `Read the Guideline [${channel.parentID}]`
-  )
-  if (!role) return
+  if (!topicGuidelineId) return
+  if (topicGuidelineId[1] !== message.id) return
+  ;(async () => {
+    await reaction.users.remove(user)
 
-  reaction.users
-    .remove(user)
-    .then(() => guild.members.fetch(user.id))
-    .then(member => member.roles.add(role))
-    .catch(console.error)
+    const roles = await guild.roles.fetch()
+    const role = roles.find(
+      role => role.name === `Read the Guideline [${channel.parentId}]`
+    )
+
+    if (!role) return
+
+    const member = await guild.members.fetch(user.id)
+
+    await member.roles.add(role)
+  })().catch(console.error)
 })
 
 client.login().catch(console.error)
