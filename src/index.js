@@ -19,7 +19,6 @@ client.once('ready', client => {
 
   /**
    * @param {import('discord.js').GuildChannel} channel
-   * @returns
    */
   const fetchGuidelineChannel = async channel => {
     if (!channel.isText()) return
