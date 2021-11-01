@@ -9,7 +9,7 @@
     "check": "prettier --check ."
   },
   "dependencies": {
-    "discord.js": "^13.2.0"
+    "discord.js": "^13.3.0"
   },
   "devDependencies": {
     "prettier": "^2.4.1"
