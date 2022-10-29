@@ -1,6 +1,6 @@
 import { setInterval } from 'node:timers/promises'
 import { ChannelType, Client, userMention } from 'discord.js'
-import * as constants from './constants'
+import * as constants from './constants.js'
 
 const client = new Client({
   intents: ['Guilds', 'GuildMessages'],
