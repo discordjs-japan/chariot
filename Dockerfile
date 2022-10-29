@@ -1,15 +1,17 @@
-FROM node:16-alpine
+FROM node:18 as deps
 
 WORKDIR /app
 
+COPY ./package*.json .
+
+RUN npm ci --omit=dev
+
+
+FROM gcr.io/distroless/nodejs:18
+
+WORKDIR /app
+
+COPY --from=build /app/ ./app
 COPY ./src ./src
-COPY ./package.json .
-COPY ./package-lock.json .
 
-RUN npm i --prod
-
-RUN adduser -S guidelinebot
-
-USER guidelinebot
-
-ENTRYPOINT [ "node", "./src/index.js" ]
+CMD [ "./src/index.js" ]
