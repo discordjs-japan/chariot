@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "repository": "https://github.com/InkoHX/guideline-bot.git",
   "author": "InkoHX <me@inkohx.dev>",
+  "type": "module",
   "license": "MIT",
   "scripts": {
     "format": "prettier --write .",
     "check": "prettier --check ."
   },
   "dependencies": {
-    "discord.js": "^13.6.0"
+    "discord.js": "^14.6.0"
   },
   "devDependencies": {
-    "prettier": "^2.4.1"
+    "prettier": "^2.7.1"
   }
 }
