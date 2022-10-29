@@ -1,3 +1,3 @@
 # guideline-bot for Discord.js Japan User Group
 
-DB 要らずのガイドラインに同意するまでチャンネルを表示させない Discord ボット
+> **Warning** このプログラムは[Discord.js Japan User Group](https://discordjs-japan.org)以外で使われることを想定していません。
