@@ -11,7 +11,7 @@ FROM gcr.io/distroless/nodejs:18
 
 WORKDIR /app
 
-COPY --from=build /app/ ./app
+COPY --from=deps /app/ ./app
 COPY ./src ./src
 
 CMD [ "./src/index.js" ]
