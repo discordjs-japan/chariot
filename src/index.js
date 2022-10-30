@@ -7,7 +7,10 @@ const client = new Client({
 })
 
 client.once('ready', client => {
-  checkInactiveThreadTimer().catch(console.error)
+  watchInactiveThread().catch(reason => {
+    console.error(reason)
+    process.exit(1)
+  })
 
   console.log(`Logged in ${client.user.tag}`)
 })
@@ -33,37 +36,52 @@ client.on('threadCreate', async (thread, newlyCreated) => {
 
 await client.login()
 
-async function checkInactiveThreadTimer() {
-  for await (const _ of setInterval(3600000, null, { ref: false })) {
-    for (const { id } of constants.forumChannels) {
-      const forumChannel = await client.channels.fetch(id)
+async function watchInactiveThread() {
+  /** @type {Array<import('discord.js').ForumChannel>} */
+  const forumChannels = await Promise.all(constants.forumChannels.map(({ id }) => client.channels.fetch(id)))
 
-      if (forumChannel?.type !== ChannelType.GuildForum)
-        throw new Error(`${id} is not ForumChannel`)
+  for (const forumChannel of forumChannels) {
+    if (forumChannel.type === ChannelType.GuildForum) continue
 
+    throw new Error(`"${forumChannel.id}" is not ForumChannel`)
+  }
+
+  for await (const _ of setInterval(600000, null, { ref: false })) {
+    console.log('[WatchInactiveThread] Start checking...')
+
+    /**
+     * @param {import('discord.js').ForumChannel} forumChannel 
+     */
+    const sendAlertToInactiveThreads = async (forumChannel) => {
       const activeThreads = (await forumChannel.threads.fetchActive()).threads
 
-      activeThreads
-        .filter(
-          it => !it.archived && it.lastMessage?.author.id !== client.user.id
-        )
-        .filter(
-          it =>
-            it.lastMessage &&
-            Date.now() - it.lastMessage.createdTimestamp > 259200000
-        )
-        .forEach(it => {
-          console.log(
-            `[Forum#${forumChannel} [Thread#${it.id}] Found inactive and unclosed thread.`
-          )
+      console.log(`[WatchInactiveThread] Found ${activeThreads.size} active threads`)
 
-          it.send({
-            content: [
-              `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
-              'もし解決済みであれば、スレッドをクローズしてください。',
-            ].join('\n'),
-          }).catch(console.error)
-        })
+      /** @type {Array<import('discord.js').Message<true>>} */
+      const lastMessages = await Promise.all(
+        activeThreads.mapValues(it => it.messages.fetch({ limit: 1 })).values()
+      ).then(it => it.map(it => it.first()))
+
+      const inactiveThreads = lastMessages
+        .filter(it => it.author.id !== client.user?.id)
+        .filter(it => Date.now() - it.createdTimestamp > 86400000)
+        .map(it => it.channel)
+
+
+      console.log(`[WatchInactiveThread] Found ${inactiveThreads.length} threads over 24 hours since last activity.`)
+
+      await Promise.all(
+        inactiveThreads.map(it => it.send({
+          content: [
+            `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
+            'もし解決済みであれば、スレッドをクローズしてください。',
+          ].join('\n'),
+        }))
+      )
     }
+
+    await Promise.all(forumChannels.map(it => sendAlertToInactiveThreads(it)))
+
+    console.log(`[WatchInactiveThread] Done.`)
   }
 }
