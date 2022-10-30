@@ -23,9 +23,11 @@ client.on('threadCreate', async (thread, newlyCreated) => {
   if (!messageContent) return
   if (thread.parent?.type !== ChannelType.GuildForum) return
 
-  await thread.send({
-    content: messageContent(thread.ownerId),
-  }).then(it => it.suppressEmbeds())
+  await thread
+    .send({
+      content: messageContent(thread.ownerId),
+    })
+    .then(it => it.suppressEmbeds())
 
   console.log(
     `[Forum#${thread.parentId}]`,
@@ -38,7 +40,9 @@ await client.login()
 
 async function watchInactiveThread() {
   /** @type {Array<import('discord.js').ForumChannel>} */
-  const forumChannels = await Promise.all(constants.forumChannels.map(({ id }) => client.channels.fetch(id)))
+  const forumChannels = await Promise.all(
+    constants.forumChannels.map(({ id }) => client.channels.fetch(id))
+  )
 
   for (const forumChannel of forumChannels) {
     if (forumChannel.type === ChannelType.GuildForum) continue
@@ -50,12 +54,14 @@ async function watchInactiveThread() {
     console.log('[WatchInactiveThread] Start checking...')
 
     /**
-     * @param {import('discord.js').ForumChannel} forumChannel 
+     * @param {import('discord.js').ForumChannel} forumChannel
      */
-    const sendAlertToInactiveThreads = async (forumChannel) => {
+    const sendAlertToInactiveThreads = async forumChannel => {
       const activeThreads = (await forumChannel.threads.fetchActive()).threads
 
-      console.log(`[WatchInactiveThread] Found ${activeThreads.size} active threads`)
+      console.log(
+        `[WatchInactiveThread] Found ${activeThreads.size} active threads`
+      )
 
       /** @type {Array<import('discord.js').Message<true>>} */
       const lastMessages = await Promise.all(
@@ -67,16 +73,19 @@ async function watchInactiveThread() {
         .filter(it => Date.now() - it.createdTimestamp > 86400000)
         .map(it => it.channel)
 
-
-      console.log(`[WatchInactiveThread] Found ${inactiveThreads.length} threads over 24 hours since last activity.`)
+      console.log(
+        `[WatchInactiveThread] Found ${inactiveThreads.length} threads over 24 hours since last activity.`
+      )
 
       await Promise.all(
-        inactiveThreads.map(it => it.send({
-          content: [
-            `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
-            'もし解決済みであれば、スレッドをクローズしてください。',
-          ].join('\n'),
-        }))
+        inactiveThreads.map(it =>
+          it.send({
+            content: [
+              `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
+              'もし解決済みであれば、スレッドをクローズしてください。',
+            ].join('\n'),
+          })
+        )
       )
     }
 

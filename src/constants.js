@@ -9,7 +9,9 @@ export const forumChannels = [
         `• https://scrapbox.io/discordjs-japan/質問のガイドライン`,
         `• フォーラムチャンネルに設定された${bold('Post Guideline')}`,
         '',
-        `質問に回答する方々は、${bold('回答のガイドライン')}を確認するようにしてください。`,
+        `質問に回答する方々は、${bold(
+          '回答のガイドライン'
+        )}を確認するようにしてください。`,
         '• https://scrapbox.io/discordjs-japan/回答のガイドライン',
         '',
         `${userMention(
