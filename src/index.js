@@ -22,7 +22,7 @@ client.on('threadCreate', async (thread, newlyCreated) => {
 
   await thread.send({
     content: messageContent(thread.ownerId),
-  })
+  }).then(it => it.suppressEmbeds())
 
   console.log(
     `[Forum#${thread.parentId}]`,
