@@ -75,7 +75,7 @@ jobs:
         with:
           images: ghcr.io/inkohx/${{ env.IMAGE_NAME }}
           flavor: |
-            suffix=arm64
+            suffix=-arm64
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
