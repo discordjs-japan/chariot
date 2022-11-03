@@ -1,21 +1,28 @@
 import { setInterval } from 'node:timers/promises'
 import { ChannelType, Client, userMention } from 'discord.js'
 import * as constants from './constants.js'
+import { Logger } from './logger.js'
 
+const logger = new Logger('Chariot')
+const eventLogger = logger.createChild('EventListener')
+const timerLogger = logger.createChild('Timer')
 const client = new Client({
   intents: ['Guilds', 'GuildMessages'],
 })
 
 client.once('ready', client => {
+  const logger = eventLogger.createChild('Ready')
+
   watchInactiveThread().catch(reason => {
-    console.error(reason)
+    logger.error(reason)
     process.exit(1)
   })
 
-  console.log(`Logged in ${client.user.tag}`)
+  logger.info(`Logged in ${client.user.tag}`)
 })
 
 client.on('threadCreate', async (thread, newlyCreated) => {
+  const logger = eventLogger.createChild('threadCreate')
   const messageContent = constants.forumChannels.find(
     it => it.id === thread.parentId
   )?.message
@@ -29,16 +36,14 @@ client.on('threadCreate', async (thread, newlyCreated) => {
     })
     .then(it => it.suppressEmbeds())
 
-  console.log(
-    `[Forum#${thread.parentId}]`,
-    `[Thread#${thread.id}]`,
-    `"${thread.name}" was created.`
-  )
+  logger.info(
+    `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`)
 })
 
 await client.login()
 
 async function watchInactiveThread() {
+  const logger = timerLogger.createChild('Interval').createChild('WatchInactiveThread')
   /** @type {Array<import('discord.js').ForumChannel>} */
   const forumChannels = await Promise.all(
     constants.forumChannels.map(({ id }) => client.channels.fetch(id))
@@ -51,7 +56,7 @@ async function watchInactiveThread() {
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    console.log('[WatchInactiveThread] Start checking...')
+    logger.info('[WatchInactiveThread] Start checking...')
 
     /**
      * @param {import('discord.js').ForumChannel} forumChannel
@@ -59,7 +64,7 @@ async function watchInactiveThread() {
     const sendAlertToInactiveThreads = async forumChannel => {
       const activeThreads = (await forumChannel.threads.fetchActive()).threads
 
-      console.log(
+      logger.info(
         `[WatchInactiveThread] Found ${activeThreads.size} active threads`
       )
 
@@ -73,7 +78,7 @@ async function watchInactiveThread() {
         .filter(it => Date.now() - it.createdTimestamp > 86400000)
         .map(it => it.channel)
 
-      console.log(
+      logger.info(
         `[WatchInactiveThread] Found ${inactiveThreads.length} threads over 24 hours since last activity.`
       )
 
@@ -91,6 +96,6 @@ async function watchInactiveThread() {
 
     await Promise.all(forumChannels.map(it => sendAlertToInactiveThreads(it)))
 
-    console.log(`[WatchInactiveThread] Done.`)
+    logger.info(`[WatchInactiveThread] Done.`)
   }
 }
