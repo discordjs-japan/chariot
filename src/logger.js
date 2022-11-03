@@ -2,8 +2,8 @@ import { inspect } from 'node:util'
 
 export class Logger {
   /**
-   * @param {string} name 
-   * @param {Logger|undefined} parent 
+   * @param {string} name
+   * @param {Logger|undefined} parent
    */
   constructor(name, parent) {
     this.name = name
@@ -12,7 +12,7 @@ export class Logger {
   }
 
   /**
-   * @param {string} name 
+   * @param {string} name
    * @returns {Logger}
    */
   createChild(name) {
@@ -46,11 +46,17 @@ export class Logger {
       child = child.parent
     }
 
-    return [
-      `[${new Intl.DateTimeFormat('ja-JP-u-ca-japanese', { timeStyle: 'medium', }).format(Date.now())}]`,
-      `[${parents.map(it => it.name).join('/')}]`,
-      `[${level}]`,
-      ...messages.map(it => typeof it === 'string' ? it : inspect(it, { colors: false })),
-    ].join(' ') + '\n'
+    return (
+      [
+        `[${new Intl.DateTimeFormat('ja-JP-u-ca-japanese', {
+          timeStyle: 'medium',
+        }).format(Date.now())}]`,
+        `[${parents.map(it => it.name).join('/')}]`,
+        `[${level}]`,
+        ...messages.map(it =>
+          typeof it === 'string' ? it : inspect(it, { colors: false })
+        ),
+      ].join(' ') + '\n'
+    )
   }
 }

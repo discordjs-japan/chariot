@@ -37,13 +37,16 @@ client.on('threadCreate', async (thread, newlyCreated) => {
     .then(it => it.suppressEmbeds())
 
   logger.info(
-    `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`)
+    `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`
+  )
 })
 
 await client.login()
 
 async function watchInactiveThread() {
-  const logger = timerLogger.createChild('Interval').createChild('WatchInactiveThread')
+  const logger = timerLogger
+    .createChild('Interval')
+    .createChild('WatchInactiveThread')
   /** @type {Array<import('discord.js').ForumChannel>} */
   const forumChannels = await Promise.all(
     constants.forumChannels.map(({ id }) => client.channels.fetch(id))
