@@ -59,7 +59,7 @@ async function watchInactiveThread() {
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    logger.info('[WatchInactiveThread] Start checking...')
+    logger.info('Start checking...')
 
     /**
      * @param {import('discord.js').ForumChannel} forumChannel
@@ -67,9 +67,7 @@ async function watchInactiveThread() {
     const sendAlertToInactiveThreads = async forumChannel => {
       const activeThreads = (await forumChannel.threads.fetchActive()).threads
 
-      logger.info(
-        `[WatchInactiveThread] Found ${activeThreads.size} active threads`
-      )
+      logger.info(`Found ${activeThreads.size} active threads`)
 
       /** @type {Array<import('discord.js').Message<true>>} */
       const lastMessages = await Promise.all(
@@ -82,7 +80,7 @@ async function watchInactiveThread() {
         .map(it => it.channel)
 
       logger.info(
-        `[WatchInactiveThread] Found ${inactiveThreads.length} threads over 24 hours since last activity.`
+        `Found ${inactiveThreads.length} threads over 24 hours since last activity.`
       )
 
       await Promise.all(
@@ -99,6 +97,6 @@ async function watchInactiveThread() {
 
     await Promise.all(forumChannels.map(it => sendAlertToInactiveThreads(it)))
 
-    logger.info(`[WatchInactiveThread] Done.`)
+    logger.info(`Done.`)
   }
 }
