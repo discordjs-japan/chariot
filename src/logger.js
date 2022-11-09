@@ -51,7 +51,7 @@ export class Logger {
         `[${new Intl.DateTimeFormat('ja-JP-u-ca-japanese', {
           timeStyle: 'medium',
         }).format(Date.now())}]`,
-        `[${parents.map(it => it.name).join('/')}]`,
+        `[${[...parents, this].map(it => it.name).join('/')}]`,
         `[${level}]`,
         ...messages.map(it =>
           typeof it === 'string' ? it : inspect(it, { colors: false })
