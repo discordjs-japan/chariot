@@ -71,8 +71,8 @@ async function watchInactiveThread() {
 
       /** @type {Array<import('discord.js').Message<true>>} */
       const lastMessages = await Promise.all(
-        activeThreads.mapValues(it => it.messages.fetch({ limit: 1 })).values()
-      ).then(it => it.map(it => it.first()))
+        activeThreads.map(it => it.messages.fetch({ limit: 1 }))
+      ).then(messages => messages.map(it => it.first()))
 
       const inactiveThreads = lastMessages
         .filter(it => it.author.id !== client.user?.id)
