@@ -56,22 +56,20 @@ client.on('threadUpdate', async (oldThread, newThread) => {
 
   /** @type {import('discord.js').ThreadChannel<true>} */
   const thread = newThread
-  const guild = newThread.guild
-  const auditLogs = await guild.fetchAuditLogs({
+  const guild = thread.guild
+  const entry = await guild.fetchAuditLogs({
     type: AuditLogEvent.ThreadUpdate,
-  })
+    limit: 1
+  }).then(it => it.entries.first())
+  const unarchived = entry.changes.some(
+    it => it.key === 'archived' && it.old && !it.new
+  )
 
-  for (const entry of auditLogs.entries.values()) {
-    if (entry.target.id !== thread.id) continue
-    const unarchived = entry.changes.some(
-      it => it.key === 'archived' && it.old && !it.new
-    )
-    if (!unarchived) continue
+  if (!entry) return
+  if (entry.target.id !== thread.id) return
+  if (!unarchived) return
 
-    await thread.send(`${entry.executor}がスレッドを再開しました。`)
-
-    break
-  }
+  await thread.send(`${entry.executor}がスレッドを再開しました。`)
 })
 
 await client.login()
