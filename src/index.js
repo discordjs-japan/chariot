@@ -57,10 +57,12 @@ client.on('threadUpdate', async (oldThread, newThread) => {
   /** @type {import('discord.js').ThreadChannel<true>} */
   const thread = newThread
   const guild = thread.guild
-  const entry = await guild.fetchAuditLogs({
-    type: AuditLogEvent.ThreadUpdate,
-    limit: 1
-  }).then(it => it.entries.first())
+  const entry = await guild
+    .fetchAuditLogs({
+      type: AuditLogEvent.ThreadUpdate,
+      limit: 1,
+    })
+    .then(it => it.entries.first())
   const unarchived = entry.changes.some(
     it => it.key === 'archived' && it.old && !it.new
   )
