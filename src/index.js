@@ -124,7 +124,10 @@ async function watchInactiveThread() {
             content: [
               `${userMention(
                 it.ownerId
-              )}、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じました。`,
+              )}、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
+              '',
+              'なおこのスレッドは誰でも再開可能です。',
+              '誰かによってスレッドが再開された場合は再度このスレッドにお知らせします。',
             ].join('\n'),
           })
         )
