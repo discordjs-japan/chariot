@@ -115,7 +115,7 @@ async function watchInactiveThread() {
         .map(it => it.channel)
 
       logger.info(
-        `Found ${inactiveThreads.length} threads over 24 hours since last activity.`
+        `Found ${inactiveThreads.length} threads over ${inactiveDurationDay} day since last activity.`
       )
 
       await Promise.all(
