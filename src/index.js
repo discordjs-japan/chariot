@@ -1,5 +1,5 @@
 import { setInterval } from 'node:timers/promises'
-import { ChannelType, Client, userMention } from 'discord.js'
+import { ChannelType, Client, userMention, AuditLogEvent } from 'discord.js'
 import * as constants from './constants.js'
 import { Logger } from './logger.js'
 
@@ -39,6 +39,39 @@ client.on('threadCreate', async (thread, newlyCreated) => {
   logger.info(
     `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`
   )
+})
+
+client.on('threadUpdate', async (oldThread, newThread) => {
+  const isForumChannel = constants.forumChannels.some(
+    it => it.id === newThread.parentId
+  )
+
+  if (!isForumChannel) return
+  if (!oldThread.archived) return
+  if (newThread.archived) return
+
+  const logger = eventLogger.createChild('threadUpdate')
+
+  logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
+
+  /** @type {import('discord.js').ThreadChannel<true>} */
+  const thread = newThread
+  const guild = newThread.guild
+  const auditLogs = await guild.fetchAuditLogs({
+    type: AuditLogEvent.ThreadUpdate,
+  })
+
+  for (const entry of auditLogs.entries.values()) {
+    if (entry.target.id !== thread.id) continue
+    const unarchived = entry.changes.some(
+      it => it.key === 'archived' && it.old && !it.new
+    )
+    if (!unarchived) continue
+
+    await thread.send(`${entry.executor}がスレッドを再開しました。`)
+
+    break
+  }
 })
 
 await client.login()
