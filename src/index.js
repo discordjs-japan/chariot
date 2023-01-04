@@ -50,12 +50,12 @@ client.on('threadUpdate', async (oldThread, newThread) => {
   if (!oldThread.archived) return
   if (newThread.archived) return
 
+  /** @type {import('discord.js').ThreadChannel<true>} */
+  const thread = newThread
   const logger = eventLogger.createChild('threadUpdate')
 
   logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
 
-  /** @type {import('discord.js').ThreadChannel<true>} */
-  const thread = newThread
   const guild = thread.guild
   const entry = await guild
     .fetchAuditLogs({
