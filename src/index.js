@@ -107,9 +107,11 @@ async function watchInactiveThread() {
         activeThreads.map(it => it.messages.fetch({ limit: 1 }))
       ).then(messages => messages.map(it => it.first()))
 
+      const inactiveDuration = 172_800_000 // 2日をミリ秒で表現した値
+      const inactiveDurationDay = inactiveDuration / (1000 * 60 * 60 * 24)
       const inactiveThreads = lastMessages
         .filter(it => it.author.id !== client.user?.id)
-        .filter(it => Date.now() - it.createdTimestamp > 86400000)
+        .filter(it => Date.now() - it.createdTimestamp > inactiveDuration)
         .map(it => it.channel)
 
       logger.info(
@@ -120,10 +122,16 @@ async function watchInactiveThread() {
         inactiveThreads.map(it =>
           it.send({
             content: [
-              `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
-              'もし解決済みであれば、スレッドをクローズしてください。',
+              `${userMention(
+                it.ownerId
+              )}、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じました。`,
             ].join('\n'),
           })
+        )
+      )
+      await Promise.all(
+        inactiveThreads.map(it =>
+          it.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
         )
       )
     }
