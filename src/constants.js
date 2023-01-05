@@ -5,6 +5,7 @@ export const forumChannels = [
     id: '1019744831855153223',
     message: ownerId =>
       [
+        userMention(ownerId),
         bold('もう一度確認してみよう:'),
         `• https://scrapbox.io/discordjs-japan/質問のガイドライン`,
         `• フォーラムチャンネルに設定された${bold('Post Guideline')}`,
@@ -14,9 +15,7 @@ export const forumChannels = [
         )}を確認するようにしてください。`,
         '• https://scrapbox.io/discordjs-japan/回答のガイドライン',
         '',
-        `${userMention(
-          ownerId
-        )}さんは質問を終えたらスレッドをクローズすることを忘れないでください。（クローズされていない場合は再度通知します）`,
+        'スレッドに対して二日間操作が確認されない場合はスレッドを自動的に閉じますが、いつでも再開可能です。',
       ].join('\n'),
   },
 ]

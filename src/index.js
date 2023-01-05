@@ -1,5 +1,5 @@
 import { setInterval } from 'node:timers/promises'
-import { ChannelType, Client, userMention } from 'discord.js'
+import { ChannelType, Client, userMention, AuditLogEvent } from 'discord.js'
 import * as constants from './constants.js'
 import { Logger } from './logger.js'
 
@@ -41,6 +41,39 @@ client.on('threadCreate', async (thread, newlyCreated) => {
   )
 })
 
+client.on('threadUpdate', async (oldThread, newThread) => {
+  const isForumChannel = constants.forumChannels.some(
+    it => it.id === newThread.parentId
+  )
+
+  if (!isForumChannel) return
+  if (!oldThread.archived) return
+  if (newThread.archived) return
+
+  /** @type {import('discord.js').ThreadChannel<true>} */
+  const thread = newThread
+  const logger = eventLogger.createChild('threadUpdate')
+
+  logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
+
+  const guild = thread.guild
+  const entry = await guild
+    .fetchAuditLogs({
+      type: AuditLogEvent.ThreadUpdate,
+      limit: 1,
+    })
+    .then(it => it.entries.first())
+  const unarchived = entry.changes.some(
+    it => it.key === 'archived' && it.old && !it.new
+  )
+
+  if (entry && entry.target.id === thread.id && unarchived) {
+    await thread.send(`${entry.executor}がスレッドを再開しました。`)
+  } else {
+    await thread.send('スレッドが再開されました。')
+  }
+})
+
 await client.login()
 
 async function watchInactiveThread() {
@@ -74,23 +107,33 @@ async function watchInactiveThread() {
         activeThreads.map(it => it.messages.fetch({ limit: 1 }))
       ).then(messages => messages.map(it => it.first()))
 
+      const inactiveDuration = 172_800_000 // 2日をミリ秒で表現した値
+      const inactiveDurationDay = inactiveDuration / (1000 * 60 * 60 * 24)
       const inactiveThreads = lastMessages
-        .filter(it => it.author.id !== client.user?.id)
-        .filter(it => Date.now() - it.createdTimestamp > 86400000)
+        .filter(it => Date.now() - it.createdTimestamp > inactiveDuration)
         .map(it => it.channel)
 
       logger.info(
-        `Found ${inactiveThreads.length} threads over 24 hours since last activity.`
+        `Found ${inactiveThreads.length} threads over ${inactiveDurationDay} day since last activity.`
       )
 
       await Promise.all(
         inactiveThreads.map(it =>
           it.send({
             content: [
-              `${userMention(it.ownerId)}さん、問題は解決しましたか？`,
-              'もし解決済みであれば、スレッドをクローズしてください。',
+              `${userMention(
+                it.ownerId
+              )}、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
+              '',
+              'なおこのスレッドは誰でも再開可能です。',
+              '誰かによってスレッドが再開された場合は再度このスレッドにお知らせします。',
             ].join('\n'),
           })
+        )
+      )
+      await Promise.all(
+        inactiveThreads.map(it =>
+          it.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
         )
       )
     }
