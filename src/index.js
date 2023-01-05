@@ -110,7 +110,6 @@ async function watchInactiveThread() {
       const inactiveDuration = 172_800_000 // 2日をミリ秒で表現した値
       const inactiveDurationDay = inactiveDuration / (1000 * 60 * 60 * 24)
       const inactiveThreads = lastMessages
-        .filter(it => it.author.id !== client.user?.id)
         .filter(it => Date.now() - it.createdTimestamp > inactiveDuration)
         .map(it => it.channel)
 
