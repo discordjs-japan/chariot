@@ -1,6 +1,6 @@
 {
   "name": "guideline-bot",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "repository": "https://github.com/InkoHX/guideline-bot.git",
   "author": "InkoHX <me@inkohx.dev>",
   "type": "module",
