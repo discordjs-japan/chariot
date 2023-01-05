@@ -67,11 +67,11 @@ client.on('threadUpdate', async (oldThread, newThread) => {
     it => it.key === 'archived' && it.old && !it.new
   )
 
-  if (!entry) return
-  if (entry.target.id !== thread.id) return
-  if (!unarchived) return
-
-  await thread.send(`${entry.executor}がスレッドを再開しました。`)
+  if (entry && entry.target.id === thread.id && unarchived) {
+    await thread.send(`${entry.executor}がスレッドを再開しました。`)
+  } else {
+    await thread.send('スレッドが再開されました。')
+  }
 })
 
 await client.login()
