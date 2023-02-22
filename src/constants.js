@@ -1,4 +1,4 @@
-import { bold, hyperlink, userMention } from 'discord.js'
+import { bold, userMention } from 'discord.js'
 
 export const forumChannels = [
   {
