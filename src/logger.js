@@ -3,7 +3,7 @@ import { inspect } from 'node:util'
 export class Logger {
   /**
    * @param {string} name
-   * @param {Logger|undefined} parent
+   * @param {Logger} [parent]
    */
   constructor(name, parent) {
     this.name = name

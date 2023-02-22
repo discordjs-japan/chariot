@@ -1,7 +1,11 @@
+// @ts-check
 import { setInterval } from 'node:timers/promises'
 import { ChannelType, Client, userMention, AuditLogEvent } from 'discord.js'
 import * as constants from './constants.js'
 import { Logger } from './logger.js'
+/**
+ * @typedef {import('discord.js').ForumChannel} ForumChannel
+ */
 
 const logger = new Logger('Chariot')
 const eventLogger = logger.createChild('EventListener')
@@ -50,27 +54,25 @@ client.on('threadUpdate', async (oldThread, newThread) => {
   if (!oldThread.archived) return
   if (newThread.archived) return
 
-  /** @type {import('discord.js').ThreadChannel<true>} */
-  const thread = newThread
   const logger = eventLogger.createChild('threadUpdate')
 
-  logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
+  logger.info(`"${newThread.name}" (${newThread.id}) has been reopened.`)
 
-  const guild = thread.guild
-  const entry = await guild
-    .fetchAuditLogs({
-      type: AuditLogEvent.ThreadUpdate,
-      limit: 1,
-    })
-    .then(it => it.entries.first())
+  const guild = newThread.guild
+  const entries = await guild.fetchAuditLogs({
+    type: AuditLogEvent.ThreadUpdate,
+    limit: 1,
+  })
+  const entry = entries.entries.first()
+  if (!entry) return
   const unarchived = entry.changes.some(
     it => it.key === 'archived' && it.old && !it.new
   )
 
-  if (entry && entry.target.id === thread.id && unarchived) {
-    await thread.send(`${entry.executor}がスレッドを再開しました。`)
+  if (entry && entry.target.id === newThread.id && unarchived) {
+    await newThread.send(`${entry.executor}がスレッドを再開しました。`)
   } else {
-    await thread.send('スレッドが再開されました。')
+    await newThread.send('スレッドが再開されました。')
   }
 })
 
@@ -80,9 +82,11 @@ async function watchInactiveThread() {
   const logger = timerLogger
     .createChild('Interval')
     .createChild('WatchInactiveThread')
-  /** @type {Array<import('discord.js').ForumChannel>} */
-  const forumChannels = await Promise.all(
-    constants.forumChannels.map(({ id }) => client.channels.fetch(id))
+
+  const forumChannels = /** @type {ForumChannel[]} */ (
+    await Promise.all(
+      constants.forumChannels.map(({ id }) => client.channels.fetch(id))
+    )
   )
 
   for (const forumChannel of forumChannels) {
@@ -95,23 +99,32 @@ async function watchInactiveThread() {
     logger.info('Start checking...')
 
     /**
-     * @param {import('discord.js').ForumChannel} forumChannel
+     * @param {ForumChannel} forumChannel
      */
     const sendAlertToInactiveThreads = async forumChannel => {
       const activeThreads = (await forumChannel.threads.fetchActive()).threads
 
       logger.info(`Found ${activeThreads.size} active threads`)
 
-      /** @type {Array<import('discord.js').Message<true>>} */
-      const lastMessages = await Promise.all(
-        activeThreads.map(it => it.messages.fetch({ limit: 1 }))
-      ).then(messages => messages.map(it => it.first()))
+      const activeThreadsWithLastMessage = await Promise.all(
+        activeThreads.map(async thread => {
+          const messages = await thread.messages.fetch({ limit: 1 })
+          return {
+            thread,
+            lastMessage: messages.first(),
+          }
+        })
+      )
 
       const inactiveDuration = 172_800_000 // 2日をミリ秒で表現した値
       const inactiveDurationDay = inactiveDuration / (1000 * 60 * 60 * 24)
-      const inactiveThreads = lastMessages
-        .filter(it => Date.now() - it.createdTimestamp > inactiveDuration)
-        .map(it => it.channel)
+      const inactiveThreads = activeThreadsWithLastMessage
+        .filter(
+          ({ lastMessage }) =>
+            lastMessage &&
+            Date.now() - lastMessage.createdTimestamp > inactiveDuration
+        )
+        .map(({ thread }) => thread)
 
       logger.info(
         `Found ${inactiveThreads.length} threads over ${inactiveDurationDay} day since last activity.`
@@ -121,9 +134,9 @@ async function watchInactiveThread() {
         inactiveThreads.map(it =>
           it.send({
             content: [
-              `${userMention(
-                it.ownerId
-              )}、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
+              `${
+                it.ownerId && userMention(it.ownerId)
+              }、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
               '',
               'なおこのスレッドは誰でも再開可能です。',
               '誰かによってスレッドが再開された場合は再度このスレッドにお知らせします。',
