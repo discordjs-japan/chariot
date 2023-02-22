@@ -5,6 +5,8 @@ import * as constants from './constants.js'
 import { Logger } from './logger.js'
 /**
  * @typedef {import('discord.js').ForumChannel} ForumChannel
+ * @typedef {import('discord.js').Channel} Channel
+ * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
  */
 
 const logger = new Logger('Chariot')
@@ -17,7 +19,7 @@ const client = new Client({
 client.once('ready', client => {
   const logger = eventLogger.createChild('Ready')
 
-  watchInactiveThread().catch(reason => {
+  watch().catch(reason => {
     logger.error(reason)
     process.exit(1)
   })
@@ -27,12 +29,23 @@ client.once('ready', client => {
 
 client.on('threadCreate', async (thread, newlyCreated) => {
   const logger = eventLogger.createChild('threadCreate')
-  const messageContent = constants.forumChannels.find(
+  const forumSetting = constants.forumChannels.find(
     it => it.id === thread.parentId
-  )?.message
+  )
+  if (!forumSetting) return
   if (!newlyCreated) return
-  if (!messageContent) return
+
+  onThreadCreate(logger, thread, forumSetting.message)
+})
+
+/**
+ * @param {Logger} logger
+ * @param {AnyThreadChannel} thread
+ * @param {(ownerId: string) => string} messageContent
+ */
+async function onThreadCreate(logger, thread, messageContent) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
+  if (!thread.ownerId) return
 
   await thread
     .send({
@@ -43,22 +56,27 @@ client.on('threadCreate', async (thread, newlyCreated) => {
   logger.info(
     `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`
   )
-})
+}
 
 client.on('threadUpdate', async (oldThread, newThread) => {
+  const logger = eventLogger.createChild('threadUpdate')
   const isForumChannel = constants.forumChannels.some(
     it => it.id === newThread.parentId
   )
-
   if (!isForumChannel) return
-  if (!oldThread.archived) return
-  if (newThread.archived) return
 
-  const logger = eventLogger.createChild('threadUpdate')
+  if (oldThread.archived && !newThread.archived)
+    onThreadReopen(logger, newThread)
+})
 
-  logger.info(`"${newThread.name}" (${newThread.id}) has been reopened.`)
+/**
+ * @param {Logger} logger
+ * @param {AnyThreadChannel} thread
+ */
+async function onThreadReopen(logger, thread) {
+  logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
 
-  const guild = newThread.guild
+  const guild = thread.guild
   const entries = await guild.fetchAuditLogs({
     type: AuditLogEvent.ThreadUpdate,
     limit: 1,
@@ -69,90 +87,103 @@ client.on('threadUpdate', async (oldThread, newThread) => {
     it => it.key === 'archived' && it.old && !it.new
   )
 
-  if (entry && entry.target.id === newThread.id && unarchived) {
-    await newThread.send(`${entry.executor}がスレッドを再開しました。`)
+  if (entry && entry.target.id === thread.id && unarchived) {
+    await thread.send(`${entry.executor}がスレッドを再開しました。`)
   } else {
-    await newThread.send('スレッドが再開されました。')
+    await thread.send('スレッドが再開されました。')
   }
-})
+}
 
 await client.login()
 
-async function watchInactiveThread() {
-  const logger = timerLogger
-    .createChild('Interval')
-    .createChild('WatchInactiveThread')
+async function watch() {
+  const logger = timerLogger.createChild('Interval')
 
-  const forumChannels = /** @type {ForumChannel[]} */ (
-    await Promise.all(
-      constants.forumChannels.map(({ id }) => client.channels.fetch(id))
-    )
+  const forumChannels = await Promise.all(
+    constants.forumChannels.map(({ id }) => client.channels.fetch(id))
   )
 
-  for (const forumChannel of forumChannels) {
-    if (forumChannel.type === ChannelType.GuildForum) continue
+  const isAllForumChannel = forumChannels.every(
+    /** @type {(channel: Channel | null) => channel is ForumChannel} */
+    (channel => channel?.type === ChannelType.GuildForum)
+  )
 
-    throw new Error(`"${forumChannel.id}" is not ForumChannel`)
+  if (!isAllForumChannel) {
+    const invalids = forumChannels.filter(
+      channel => channel?.type !== ChannelType.GuildForum
+    )
+    throw new Error(
+      `Invalid channel type: ${invalids.map(it => it?.id).join(', ')}`
+    )
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    logger.info('Start checking...')
-
-    /**
-     * @param {ForumChannel} forumChannel
-     */
-    const sendAlertToInactiveThreads = async forumChannel => {
-      const activeThreads = (await forumChannel.threads.fetchActive()).threads
-
-      logger.info(`Found ${activeThreads.size} active threads`)
-
-      const activeThreadsWithLastMessage = await Promise.all(
-        activeThreads.map(async thread => {
-          const messages = await thread.messages.fetch({ limit: 1 })
-          return {
-            thread,
-            lastMessage: messages.first(),
-          }
-        })
-      )
-
-      const inactiveDuration = 172_800_000 // 2日をミリ秒で表現した値
-      const inactiveDurationDay = inactiveDuration / (1000 * 60 * 60 * 24)
-      const inactiveThreads = activeThreadsWithLastMessage
-        .filter(
-          ({ lastMessage }) =>
-            lastMessage &&
-            Date.now() - lastMessage.createdTimestamp > inactiveDuration
-        )
-        .map(({ thread }) => thread)
-
-      logger.info(
-        `Found ${inactiveThreads.length} threads over ${inactiveDurationDay} day since last activity.`
-      )
-
-      await Promise.all(
-        inactiveThreads.map(it =>
-          it.send({
-            content: [
-              `${
-                it.ownerId && userMention(it.ownerId)
-              }、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
-              '',
-              'なおこのスレッドは誰でも再開可能です。',
-              '誰かによってスレッドが再開された場合は再度このスレッドにお知らせします。',
-            ].join('\n'),
-          })
-        )
-      )
-      await Promise.all(
-        inactiveThreads.map(it =>
-          it.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
-        )
-      )
-    }
-
-    await Promise.all(forumChannels.map(it => sendAlertToInactiveThreads(it)))
-
-    logger.info(`Done.`)
+    await onInterval(logger, forumChannels)
   }
+}
+
+/**
+ * @param {Logger} logger
+ * @param {ForumChannel[]} forumChannels
+ */
+async function onInterval(logger, forumChannels) {
+  logger.info('Start onInterval...')
+
+  await Promise.all(
+    forumChannels.map(forumChannel =>
+      archiveInactiveThreads(
+        logger.createChild('WatchInactiveThread'),
+        forumChannel
+      )
+    )
+  )
+
+  logger.info(`Done.`)
+}
+
+/**
+ * @param {Logger} logger
+ * @param {ForumChannel} forumChannel
+ */
+async function archiveInactiveThreads(logger, forumChannel) {
+  const { threads: activeThreads } = await forumChannel.threads.fetchActive()
+
+  logger.info(`Found ${activeThreads.size} active threads`)
+
+  const inactiveDurationDay = 2
+  const results = await Promise.all(
+    activeThreads.map(thread => archiveIfInactive(thread, inactiveDurationDay))
+  )
+  const archived = results.filter(archived => archived).length
+
+  logger.info(
+    `Found ${archived} threads over ${inactiveDurationDay} day since last activity.`
+  )
+}
+
+/**
+ * @param {AnyThreadChannel} thread
+ * @param {number} inactiveDurationDay
+ * @returns {Promise<boolean>} true if archived
+ */
+async function archiveIfInactive(thread, inactiveDurationDay) {
+  const messages = await thread.messages.fetch({ limit: 1 })
+  const lastMessage = messages.first()
+  if (!lastMessage) return false
+
+  const inactiveDuration = inactiveDurationDay * (1000 * 60 * 60 * 24)
+  if (Date.now() - lastMessage.createdTimestamp < inactiveDuration) return false
+
+  await thread.send({
+    content: [
+      `${
+        thread.ownerId && userMention(thread.ownerId)
+      }、このスレッドは${inactiveDurationDay}日間操作がなかったため自動的に閉じさせていただきます。`,
+      '',
+      'なおこのスレッドは誰でも再開可能です。',
+      '誰かによってスレッドが再開された場合は再度このスレッドにお知らせします。',
+    ].join('\n'),
+  })
+  await thread.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
+  return true
 }
