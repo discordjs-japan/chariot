@@ -1,5 +1,9 @@
+// @ts-check
 import { inspect } from 'node:util'
 
+/**
+ * @typedef {'INFO' | 'ERROR'} Level
+ */
 export class Logger {
   /**
    * @param {string} name
@@ -19,24 +23,44 @@ export class Logger {
     return new Logger(name, this)
   }
 
+  /**
+   * @param  {...unknown} messages
+   */
   info(...messages) {
     this.#writeStdout('INFO', ...messages)
   }
 
+  /**
+   * @param  {...unknown} messages
+   */
   error(...messages) {
     this.#writeStderr('ERROR', ...messages)
   }
 
+  /**
+   * @param {Level} level
+   * @param  {...unknown} messages
+   */
   #writeStdout(level, ...messages) {
     process.stdout.write(this.#makeMessage(level, ...messages), 'utf8')
   }
 
+  /**
+   * @param {Level} level
+   * @param  {...unknown} messages
+   */
   #writeStderr(level, ...messages) {
     process.stderr.write(this.#makeMessage(level, ...messages), 'utf8')
   }
 
+  /**
+   * @param {Level} level
+   * @param  {...unknown} messages
+   */
   #makeMessage(level, ...messages) {
+    /** @type {Logger[]} */
     const parents = []
+    /** @type {Logger} */
     let child = this
 
     while (true) {
