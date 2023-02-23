@@ -1,5 +1,13 @@
-import { bold, hyperlink, userMention } from 'discord.js'
+// @ts-check
+import { bold, userMention } from 'discord.js'
 
+/**
+ * @typedef {object} ForumChannelSetting
+ * @property {string} id
+ * @property {(ownerId: string) => string} message
+ */
+
+/** @type {ForumChannelSetting[]} */
 export const forumChannels = [
   {
     id: '1019744831855153223',
