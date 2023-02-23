@@ -1,6 +1,6 @@
 // @ts-check
 import { setInterval } from 'node:timers/promises'
-import { ChannelType, Client } from 'discord.js'
+import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
 import * as constants from './constants.js'
 import { Logger } from './logger.js'
 import { onForumThreadCreate } from './onForumThreadCreate.js'
@@ -15,10 +15,10 @@ const logger = new Logger('Chariot')
 const eventLogger = logger.createChild('EventListener')
 const timerLogger = logger.createChild('Timer')
 const client = new Client({
-  intents: ['Guilds', 'GuildMessages'],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 })
 
-client.once('ready', client => {
+client.once(Events.ClientReady, client => {
   const logger = eventLogger.createChild('Ready')
 
   watch().catch(reason => {
@@ -29,7 +29,7 @@ client.once('ready', client => {
   logger.info(`Logged in ${client.user.tag}`)
 })
 
-client.on('threadCreate', async (thread, newlyCreated) => {
+client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   const logger = eventLogger.createChild('threadCreate')
   const forumSetting = constants.forumChannels.find(
     it => it.id === thread.parentId
@@ -40,7 +40,7 @@ client.on('threadCreate', async (thread, newlyCreated) => {
   onForumThreadCreate(logger, thread, forumSetting.message)
 })
 
-client.on('threadUpdate', async (oldThread, newThread) => {
+client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   const logger = eventLogger.createChild('threadUpdate')
   const isForumChannel = constants.forumChannels.some(
     it => it.id === newThread.parentId
