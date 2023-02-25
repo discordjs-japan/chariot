@@ -1,5 +1,6 @@
 // @ts-check
 import { handleInactiveClose } from './handleInactiveClose.js'
+import { handleReactionClose } from './handleReactionClose.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
@@ -35,9 +36,16 @@ async function onIntervalForForum(logger, { channel, setting }) {
 
   const inactiveDurationDay = 2
   const results = await Promise.all(
-    activeThreads.map(thread =>
-      handleInactiveClose(thread, inactiveDurationDay, setting)
-    )
+    activeThreads
+      .map(thread => [
+        handleInactiveClose(thread, inactiveDurationDay, setting),
+        handleReactionClose(
+          logger.createChild(`handleReactionClose:${thread.id}`),
+          thread,
+          setting
+        ),
+      ])
+      .flat()
   )
   const archived = results.filter(archived => archived).length
 
