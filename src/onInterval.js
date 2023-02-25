@@ -35,10 +35,15 @@ async function onIntervalForForum(logger, { channel, setting }) {
   logger.info(`Found ${activeThreads.size} active threads`)
 
   const inactiveDurationDay = 2
-  const results = await Promise.all(
+  await Promise.all(
     activeThreads
       .map(thread => [
-        handleInactiveClose(thread, inactiveDurationDay, setting),
+        handleInactiveClose(
+          logger.createChild(`handleInactiveClose:${thread.id}`),
+          thread,
+          inactiveDurationDay,
+          setting
+        ),
         handleReactionClose(
           logger.createChild(`handleReactionClose:${thread.id}`),
           thread,
@@ -46,10 +51,5 @@ async function onIntervalForForum(logger, { channel, setting }) {
         ),
       ])
       .flat()
-  )
-  const archived = results.filter(archived => archived).length
-
-  logger.info(
-    `Found ${archived} threads over ${inactiveDurationDay} day since last activity.`
   )
 }
