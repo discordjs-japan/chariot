@@ -1,14 +1,16 @@
 // @ts-check
 import { setInterval } from 'node:timers/promises'
 import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
-import * as constants from './constants.js'
 import { Logger } from './logger.js'
 import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
 import { onInterval } from './onInterval.js'
+import { forumChannelSettings } from './forum.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
+ * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
+ * @typedef {import('./forum.js').Forum} Forum
  */
 
 const logger = new Logger('Chariot')
@@ -31,24 +33,19 @@ client.once(Events.ClientReady, client => {
 
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   const logger = eventLogger.createChild('threadCreate')
-  const forumSetting = constants.forumChannels.find(
-    it => it.id === thread.parentId
-  )
-  if (!forumSetting) return
-  if (!newlyCreated) return
+  const setting = forumChannelSettings.find(it => it.id === thread.parentId)
+  if (!setting) return
 
-  onForumThreadCreate(logger, thread, forumSetting.message)
+  if (newlyCreated) onForumThreadCreate(logger, thread, setting)
 })
 
 client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   const logger = eventLogger.createChild('threadUpdate')
-  const isForumChannel = constants.forumChannels.some(
-    it => it.id === newThread.parentId
-  )
-  if (!isForumChannel) return
+  const setting = forumChannelSettings.find(it => it.id === newThread.parentId)
+  if (!setting) return
 
   if (oldThread.archived && !newThread.archived)
-    onForumThreadReopen(logger, newThread)
+    onForumThreadReopen(logger, newThread, setting)
 })
 
 await client.login()
@@ -56,25 +53,32 @@ await client.login()
 async function watch() {
   const logger = timerLogger.createChild('Interval')
 
-  const forumChannels = await Promise.all(
-    constants.forumChannels.map(({ id }) => client.channels.fetch(id))
+  const forums = await Promise.all(
+    forumChannelSettings.map(async setting => {
+      const channel = await client.channels.fetch(setting.id)
+      return { channel, setting }
+    })
   )
 
-  const isAllForumChannel = forumChannels.every(
-    /** @type {(channel: Channel | null) => channel is ForumChannel} */
-    (channel => channel?.type === ChannelType.GuildForum)
+  const isAllForumChannel = forums.every(
+    /**
+     * @type {(forum: { channel: Channel | null, setting: ForumChannelSetting }) => forum is Forum}
+     */
+    (({ channel }) => channel?.type === ChannelType.GuildForum)
   )
 
   if (!isAllForumChannel) {
-    const invalids = forumChannels.filter(
-      channel => channel?.type !== ChannelType.GuildForum
+    const invalids = forums.filter(
+      ({ channel }) => channel?.type !== ChannelType.GuildForum
     )
     throw new Error(
-      `Invalid channel type: ${invalids.map(it => it?.id).join(', ')}`
+      `Invalid channel type: ${invalids
+        .map(({ setting }) => setting.id)
+        .join(', ')}`
     )
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    await onInterval(logger, forumChannels)
+    await onInterval(logger, forums)
   }
 }

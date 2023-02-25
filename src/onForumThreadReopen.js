@@ -3,13 +3,15 @@ import { AuditLogEvent } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
+ * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  */
 
 /**
  * @param {Logger} logger
  * @param {AnyThreadChannel} thread
+ * @param {ForumChannelSetting} setting
  */
-export async function onForumThreadReopen(logger, thread) {
+export async function onForumThreadReopen(logger, thread, setting) {
   logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
 
   const guild = thread.guild
@@ -24,8 +26,8 @@ export async function onForumThreadReopen(logger, thread) {
   )
 
   if (entry && entry.target.id === thread.id && unarchived) {
-    await thread.send(`${entry.executor}がスレッドを再開しました。`)
+    await thread.send(setting.onReopen(entry.executor?.id))
   } else {
-    await thread.send('スレッドが再開されました。')
+    await thread.send(setting.onReopen())
   }
 }
