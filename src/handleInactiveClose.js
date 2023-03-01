@@ -23,7 +23,7 @@ export async function handleInactiveClose(
   if (!lastMessage) return
 
   const inactiveDuration = inactiveDurationDay * (1000 * 60 * 60 * 24)
-  if (Date.now() - lastMessage.createdTimestamp < inactiveDuration) return false
+  if (Date.now() - lastMessage.createdTimestamp < inactiveDuration) return
 
   await thread.send(setting.onStale(thread.ownerId, inactiveDurationDay))
   await thread.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
