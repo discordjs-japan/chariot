@@ -35,6 +35,11 @@ export async function handleReactionClose(logger, setting, thread, starter) {
   // 👎 * 0~2 + ⚠️ * 1 -> なにもしない
   if (!bad || bad.count < 3) return
 
+  // must be before bad.remove()
+  const usersString = bad.users.cache
+    .map(user => `${user.tag} (${user.id})`)
+    .join(', ')
+
   // 👎 * 3~  + ⚠️ * 0 -> ⚠️ つけて 👎 消してclose
   // 👎 * 3~  + ⚠️ * 1 -> ❌ つけてclose
   await Promise.all([
@@ -42,9 +47,6 @@ export async function handleReactionClose(logger, setting, thread, starter) {
     starter.react(warning?.me ? '❌' : '⚠️'),
     thread.send(setting[warning?.me ? 'onLock' : 'onClose'](starter.author.id)),
   ])
-  const usersString = bad.users.cache
-    .map(user => `${user.tag} (${user.id})`)
-    .join(', ')
   await thread[warning?.me ? 'setLocked' : 'setArchived'](
     true,
     `:-1: by ${usersString}`

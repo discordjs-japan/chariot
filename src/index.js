@@ -20,7 +20,11 @@ const logger = new Logger('Chariot')
 const eventLogger = logger.createChild('EventListener')
 const timerLogger = logger.createChild('Timer')
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
 })
 
 client.once(Events.ClientReady, client => {
