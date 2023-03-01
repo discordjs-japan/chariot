@@ -52,7 +52,7 @@ export async function handleReactionClose(logger, setting, thread, starter) {
   ])
 
   await thread.setArchived(true, `:-1: by ${usersString}`)
-  if (warning?.me) await thread.setLocked(true, `:-1: by ${usersString}`)
+  if (warning?.me) await thread.setLocked()
 
   logger.info(
     `${warning?.me ? 'locked' : 'closed'} "${thread.name}" (${
