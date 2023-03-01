@@ -1,5 +1,5 @@
 // @ts-check
-import { ChannelType } from 'discord.js'
+import { ChannelType, MessageFlags } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
@@ -45,7 +45,10 @@ export async function handleReactionClose(logger, setting, thread, starter) {
   await Promise.all([
     !warning?.me && bad.remove(),
     starter.react(warning?.me ? '❌' : '⚠️'),
-    thread.send(setting[warning?.me ? 'onLock' : 'onClose'](starter.author.id)),
+    thread.send({
+      content: setting[warning?.me ? 'onLock' : 'onClose'](starter.author.id),
+      flags: MessageFlags.SuppressEmbeds,
+    }),
   ])
   await thread[warning?.me ? 'setLocked' : 'setArchived'](
     true,
