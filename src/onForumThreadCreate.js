@@ -23,6 +23,6 @@ export async function onForumThreadCreate(logger, thread, setting) {
     .then(it => it.suppressEmbeds())
 
   logger.info(
-    `"${thread.parent.name}" (${thread.parentId}) で"${thread.name}" (${thread.id}) が作成されました。`
+    `"${thread.name}" (${thread.id}) has been created in "${thread.parent.name}" (${thread.parentId}).`
   )
 }

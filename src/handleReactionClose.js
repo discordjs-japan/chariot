@@ -20,7 +20,8 @@ export async function handleReactionClose(logger, setting, thread, starter) {
   if (!starter) {
     await thread.setLocked()
     logger.info(
-      `"${thread.parent.name}" (${thread.parentId}) は最初の投稿が削除されたためロックします。`
+      `"${thread.parent.name}" (${thread.parentId}) は最初の投稿が削除されたためロックします。`,
+      `locked "${thread.parent.name}" (${thread.parentId}) because the starter post was deleted.`
     )
     return
   }
@@ -41,15 +42,16 @@ export async function handleReactionClose(logger, setting, thread, starter) {
     starter.react(warning?.me ? '❌' : '⚠️'),
     thread.send(setting[warning?.me ? 'onLock' : 'onClose'](starter.author.id)),
   ])
+  const usersString = bad.users.cache
+    .map(user => `${user.tag} (${user.id})`)
+    .join(', ')
   await thread[warning?.me ? 'setLocked' : 'setArchived'](
     true,
-    `:-1: by ${bad.users.cache
-      .map(user => `${user.tag} (${user.id})`)
-      .join(', ')}`
+    `:-1: by ${usersString}`
   )
   logger.info(
-    `"${thread.parent.name}" (${thread.parentId}) は:-1:が${
-      warning?.me ? '再度' : ''
-    }溜まったためロックします。`
+    `${warning?.me ? 'locked' : 'closed'} "${thread.name}" (${
+      thread.id
+    }) because it has been :-1:-ed by ${usersString}.`
   )
 }

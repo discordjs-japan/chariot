@@ -28,6 +28,6 @@ export async function handleInactiveClose(
   await thread.send(setting.onStale(thread.ownerId, inactiveDurationDay))
   await thread.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
   logger.info(
-    `"${thread.parent?.name}" (${thread.parentId}) は${inactiveDurationDay}日間操作がなかったためクローズします。`
+    `closed "${thread.name}" (${thread.id}) because it has been inactive for ${inactiveDurationDay} days.`
   )
 }
