@@ -1,18 +1,13 @@
 // @ts-check
 import { setInterval } from 'node:timers/promises'
-import {
-  ChannelType,
-  Client,
-  GatewayIntentBits,
-  Events,
-  DiscordAPIError,
-} from 'discord.js'
+import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
 import { Logger } from './logger.js'
 import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
 import { onForumPostReactionAdd } from './onForumPostReactionAdd.js'
+import { fetchStarterMessageOrNull } from './starter.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
@@ -113,14 +108,7 @@ async function fetchForumsAndStarters() {
           `Invalid channel type; ${setting.id} has type ${channel?.type}`
         )
       const { threads: activeThreads } = await channel.threads.fetchActive()
-      await Promise.all(
-        activeThreads.map(async thread =>
-          thread.fetchStarterMessage().catch(reason => {
-            if (reason.code === 10008) return null
-            else throw reason
-          })
-        )
-      )
+      await Promise.all(activeThreads.map(fetchStarterMessageOrNull))
 
       return { channel, setting }
     })
