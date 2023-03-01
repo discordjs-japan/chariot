@@ -1,4 +1,6 @@
 // @ts-check
+import { handleInactiveClose } from './handleInactiveClose.js'
+import { handleReactionClose } from './handleReactionClose.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
@@ -12,54 +14,42 @@
  * @param {Forum[]} forums
  */
 export async function onInterval(logger, forums) {
-  logger.info('Start onInterval...')
+  logger.info('Start')
 
   await Promise.all(
     forums.map(forum =>
-      archiveInactiveThreads(logger.createChild('WatchInactiveThread'), forum)
+      onIntervalForForum(logger.createChild(`Forum:${forum.setting.id}`), forum)
     )
   )
 
-  logger.info(`Done.`)
+  logger.info(`Done`)
 }
 
 /**
  * @param {Logger} logger
  * @param {Forum} param1
  */
-async function archiveInactiveThreads(logger, { channel, setting }) {
+async function onIntervalForForum(logger, { channel, setting }) {
   const { threads: activeThreads } = await channel.threads.fetchActive()
 
   logger.info(`Found ${activeThreads.size} active threads`)
 
   const inactiveDurationDay = 2
-  const results = await Promise.all(
-    activeThreads.map(thread =>
-      archiveIfInactive(thread, inactiveDurationDay, setting)
-    )
+  await Promise.all(
+    activeThreads
+      .map(thread => [
+        handleInactiveClose(
+          logger.createChild(`handleInactiveClose:${thread.id}`),
+          setting,
+          thread,
+          inactiveDurationDay
+        ),
+        handleReactionClose(
+          logger.createChild(`handleReactionClose:${thread.id}`),
+          setting,
+          thread
+        ),
+      ])
+      .flat()
   )
-  const archived = results.filter(archived => archived).length
-
-  logger.info(
-    `Found ${archived} threads over ${inactiveDurationDay} day since last activity.`
-  )
-}
-
-/**
- * @param {AnyThreadChannel} thread
- * @param {number} inactiveDurationDay
- * @param {ForumChannelSetting} setting
- * @returns {Promise<boolean>} true if archived
- */
-async function archiveIfInactive(thread, inactiveDurationDay, setting) {
-  const messages = await thread.messages.fetch({ limit: 1 })
-  const lastMessage = messages.first()
-  if (!lastMessage) return false
-
-  const inactiveDuration = inactiveDurationDay * (1000 * 60 * 60 * 24)
-  if (Date.now() - lastMessage.createdTimestamp < inactiveDuration) return false
-
-  await thread.send(setting.onStale(thread.ownerId, inactiveDurationDay))
-  await thread.setArchived(true, `${inactiveDurationDay}日間操作がなかったため`)
-  return true
 }

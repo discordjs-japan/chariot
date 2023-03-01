@@ -6,9 +6,12 @@ import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
+import { onForumPostReactionAdd } from './onForumPostReactionAdd.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
+ * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
+ * @typedef {import('discord.js').Message} Message
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('./forum.js').Forum} Forum
  */
@@ -36,7 +39,12 @@ client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   const setting = forumChannelSettings.find(it => it.id === thread.parentId)
   if (!setting) return
 
-  if (newlyCreated) onForumThreadCreate(logger, thread, setting)
+  if (newlyCreated)
+    onForumThreadCreate(
+      logger.createChild('onForumThreadCreate'),
+      thread,
+      setting
+    )
 })
 
 client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
@@ -45,8 +53,37 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   if (!setting) return
 
   if (oldThread.archived && !newThread.archived)
-    onForumThreadReopen(logger, newThread, setting)
+    onForumThreadReopen(
+      logger.createChild('onForumThreadReopen'),
+      newThread,
+      setting
+    )
 })
+
+client.on(Events.MessageReactionAdd, async reaction => {
+  const logger = eventLogger.createChild('messageReactionAdd')
+  const setting = forumChannelSettings.find(
+    it => it.id === reaction.message.channelId
+  )
+  if (!setting) return
+
+  const message = await reaction.message.fetch()
+  if (!isThreadStarter(message)) return
+
+  onForumPostReactionAdd(
+    logger.createChild('onForumPostReactionAdd'),
+    setting,
+    message
+  )
+})
+
+/**
+ * @param {Message} message
+ * @returns {message is Message & { channel: AnyThreadChannel }}
+ */
+function isThreadStarter(message) {
+  return message.channel.isThread()
+}
 
 await client.login()
 
@@ -79,6 +116,6 @@ async function watch() {
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    await onInterval(logger, forums)
+    await onInterval(logger.createChild(new Date().toISOString()), forums)
   }
 }
