@@ -18,9 +18,9 @@ export async function handleReactionClose(logger, setting, thread, starter) {
 
   starter ??= await thread.fetchStarterMessage()
   if (!starter) {
-    await thread.setArchived()
+    await thread.setLocked()
     logger.info(
-      `"${thread.parent.name}" (${thread.parentId}) は最初の投稿が削除されたためクローズします。`
+      `"${thread.parent.name}" (${thread.parentId}) は最初の投稿が削除されたためロックします。`
     )
     return
   }
