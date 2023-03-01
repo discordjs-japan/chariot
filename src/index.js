@@ -6,12 +6,11 @@ import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
-import { onForumPostReactionAdd } from './onForumPostReactionAdd.js'
-import { fetchStarterMessageOrNull } from './starter.js'
+import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
+import { handleReactionClose } from './handleReactionClose.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
- * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
  * @typedef {import('discord.js').Message} Message
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('./forum.js').Forum} Forum
@@ -77,22 +76,30 @@ client.on(Events.MessageReactionAdd, async reaction => {
   if (!setting) return
 
   const message = await reaction.message.fetch()
-  if (!isThreadStarter(message)) return
+  if (!message.channel.isThread()) return
 
-  onForumPostReactionAdd(
-    logger.createChild('onForumPostReactionAdd'),
+  await handleReactionClose(
+    logger.createChild('onForumStarterReactionAdd'),
     setting,
+    message.channel,
     message
   )
 })
 
-/**
- * @param {Message} message
- * @returns {message is Message & { channel: AnyThreadChannel }}
- */
-function isThreadStarter(message) {
-  return message.channel.isThread()
-}
+client.on(Events.MessageDelete, async message => {
+  const logger = eventLogger.createChild('messageDelete')
+
+  if (!message.inGuild()) return
+  if (!forumChannelSettings.some(it => it.id === message.channel.parentId))
+    return
+
+  if (!message.channel.isThread()) return
+
+  await lockThreadForNoStarter(
+    logger.createChild('onForumStarterDelete'),
+    message.channel
+  )
+})
 
 await client.login()
 
