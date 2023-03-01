@@ -2,19 +2,21 @@
 import { ChannelType } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
- * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
+ * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
+ * @typedef {import('discord.js').Message} Message
  */
 
 /**
  * @param {Logger} logger
- * @param {AnyThreadChannel} thread
  * @param {ForumChannelSetting} setting
+ * @param {AnyThreadChannel} thread
+ * @param {Message | null} [starter]
  */
-export async function handleReactionClose(logger, thread, setting) {
+export async function handleReactionClose(logger, setting, thread, starter) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
 
-  const starter = await thread.fetchStarterMessage()
+  starter ??= await thread.fetchStarterMessage()
   if (!starter) {
     await thread.setArchived()
     logger.info(

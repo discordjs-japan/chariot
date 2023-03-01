@@ -14,9 +14,9 @@
  */
 export async function handleInactiveClose(
   logger,
+  setting,
   thread,
-  inactiveDurationDay,
-  setting
+  inactiveDurationDay
 ) {
   const messages = await thread.messages.fetch({ limit: 1 })
   const lastMessage = messages.first()

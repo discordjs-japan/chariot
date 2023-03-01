@@ -40,14 +40,14 @@ async function onIntervalForForum(logger, { channel, setting }) {
       .map(thread => [
         handleInactiveClose(
           logger.createChild(`handleInactiveClose:${thread.id}`),
+          setting,
           thread,
-          inactiveDurationDay,
-          setting
+          inactiveDurationDay
         ),
         handleReactionClose(
           logger.createChild(`handleReactionClose:${thread.id}`),
-          thread,
-          setting
+          setting,
+          thread
         ),
       ])
       .flat()

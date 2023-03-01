@@ -6,9 +6,12 @@ import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
+import { onForumPostReactionAdd } from './onForumPostReactionAdd.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
+ * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
+ * @typedef {import('discord.js').Message} Message
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('./forum.js').Forum} Forum
  */
@@ -47,6 +50,27 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   if (oldThread.archived && !newThread.archived)
     onForumThreadReopen(logger, newThread, setting)
 })
+
+client.on(Events.MessageReactionAdd, async reaction => {
+  const logger = eventLogger.createChild('messageReactionAdd')
+  const setting = forumChannelSettings.find(
+    it => it.id === reaction.message.channelId
+  )
+  if (!setting) return
+
+  const message = await reaction.message.fetch()
+  if (!isThreadStarter(message)) return
+
+  onForumPostReactionAdd(logger, setting, message)
+})
+
+/**
+ * @param {Message} message
+ * @returns {message is Message & { channel: AnyThreadChannel }}
+ */
+function isThreadStarter(message) {
+  return message.channel.isThread()
+}
 
 await client.login()
 
