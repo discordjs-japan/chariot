@@ -39,7 +39,12 @@ client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   const setting = forumChannelSettings.find(it => it.id === thread.parentId)
   if (!setting) return
 
-  if (newlyCreated) onForumThreadCreate(logger, thread, setting)
+  if (newlyCreated)
+    onForumThreadCreate(
+      logger.createChild('onForumThreadCreate'),
+      thread,
+      setting
+    )
 })
 
 client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
@@ -48,7 +53,11 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   if (!setting) return
 
   if (oldThread.archived && !newThread.archived)
-    onForumThreadReopen(logger, newThread, setting)
+    onForumThreadReopen(
+      logger.createChild('onForumThreadReopen'),
+      newThread,
+      setting
+    )
 })
 
 client.on(Events.MessageReactionAdd, async reaction => {
@@ -61,7 +70,11 @@ client.on(Events.MessageReactionAdd, async reaction => {
   const message = await reaction.message.fetch()
   if (!isThreadStarter(message)) return
 
-  onForumPostReactionAdd(logger, setting, message)
+  onForumPostReactionAdd(
+    logger.createChild('onForumPostReactionAdd'),
+    setting,
+    message
+  )
 })
 
 /**
@@ -103,6 +116,6 @@ async function watch() {
   }
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
-    await onInterval(logger, forums)
+    await onInterval(logger.createChild(new Date().toISOString()), forums)
   }
 }

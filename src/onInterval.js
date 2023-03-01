@@ -14,7 +14,7 @@ import { handleReactionClose } from './handleReactionClose.js'
  * @param {Forum[]} forums
  */
 export async function onInterval(logger, forums) {
-  logger.info('Start onInterval...')
+  logger.info('Start')
 
   await Promise.all(
     forums.map(forum =>
@@ -22,7 +22,7 @@ export async function onInterval(logger, forums) {
     )
   )
 
-  logger.info(`Done.`)
+  logger.info(`Done`)
 }
 
 /**
