@@ -3,20 +3,22 @@ import { ChannelType } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
+ * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
+ *
  */
 
 /**
  * @param {Logger} logger
  * @param {AnyThreadChannel} thread
- * @param {(ownerId: string) => string} messageContent
+ * @param {ForumChannelSetting} setting
  */
-export async function onForumThreadCreate(logger, thread, messageContent) {
+export async function onForumThreadCreate(logger, thread, setting) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
   if (!thread.ownerId) return
 
   await thread
     .send({
-      content: messageContent(thread.ownerId),
+      content: setting.onCreate(thread.ownerId),
     })
     .then(it => it.suppressEmbeds())
 
