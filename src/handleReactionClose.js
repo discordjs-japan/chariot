@@ -16,7 +16,10 @@ import { ChannelType, MessageFlags } from 'discord.js'
 export async function handleReactionClose(logger, setting, thread, starter) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
 
-  starter ??= await thread.fetchStarterMessage()
+  starter ??= await thread.fetchStarterMessage().catch(reason => {
+    if (reason.code === 10008) return null
+    else throw reason
+  })
   if (!starter) {
     await thread.setLocked()
     logger.info(

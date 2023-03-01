@@ -115,9 +115,10 @@ async function fetchForumsAndStarters() {
       const { threads: activeThreads } = await channel.threads.fetchActive()
       await Promise.all(
         activeThreads.map(async thread =>
-          thread
-            .fetchStarterMessage()
-            .catch(reason => (reason.code === 10008 ? null : reason))
+          thread.fetchStarterMessage().catch(reason => {
+            if (reason.code === 10008) return null
+            else throw reason
+          })
         )
       )
 
