@@ -1,6 +1,12 @@
 // @ts-check
 import { setInterval } from 'node:timers/promises'
-import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
+import {
+  ChannelType,
+  Client,
+  GatewayIntentBits,
+  Events,
+  DiscordAPIError,
+} from 'discord.js'
 import { Logger } from './logger.js'
 import { onForumThreadCreate } from './onForumThreadCreate.js'
 import { onForumThreadReopen } from './onForumThreadReopen.js'
@@ -108,7 +114,11 @@ async function fetchForumsAndStarters() {
         )
       const { threads: activeThreads } = await channel.threads.fetchActive()
       await Promise.all(
-        activeThreads.map(async thread => thread.fetchStarterMessage())
+        activeThreads.map(async thread =>
+          thread
+            .fetchStarterMessage()
+            .catch(reason => (reason.code === 10008 ? null : reason))
+        )
       )
 
       return { channel, setting }
