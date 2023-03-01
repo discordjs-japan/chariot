@@ -27,15 +27,18 @@ const client = new Client({
   ],
 })
 
-client.once(Events.ClientReady, client => {
+client.once(Events.ClientReady, async client => {
   const logger = eventLogger.createChild('Ready')
 
-  watch().catch(reason => {
+  logger.info(`Logged in ${client.user.tag}`)
+
+  try {
+    const forums = await fetchForumsAndStarters()
+    await watch(forums)
+  } catch (reason) {
     logger.error(reason)
     process.exit(1)
-  })
-
-  logger.info(`Logged in ${client.user.tag}`)
+  }
 })
 
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
@@ -91,33 +94,50 @@ function isThreadStarter(message) {
 
 await client.login()
 
-async function watch() {
-  const logger = timerLogger.createChild('Interval')
-
-  const forums = await Promise.all(
+/**
+ * @returns {Promise<Forum[]>}
+ */
+async function fetchForumsAndStarters() {
+  const result = await Promise.allSettled(
     forumChannelSettings.map(async setting => {
       const channel = await client.channels.fetch(setting.id)
+      if (channel?.type !== ChannelType.GuildForum)
+        throw new Error(
+          `Invalid channel type; ${setting.id} has type ${channel?.type}`
+        )
+      const { threads: activeThreads } = await channel.threads.fetchActive()
+      await Promise.all(
+        activeThreads.map(async thread => thread.fetchStarterMessage())
+      )
+
       return { channel, setting }
     })
   )
 
-  const isAllForumChannel = forums.every(
-    /**
-     * @type {(forum: { channel: Channel | null, setting: ForumChannelSetting }) => forum is Forum}
-     */
-    (({ channel }) => channel?.type === ChannelType.GuildForum)
-  )
-
-  if (!isAllForumChannel) {
-    const invalids = forums.filter(
-      ({ channel }) => channel?.type !== ChannelType.GuildForum
+  if (
+    !result.every(
+      /** @type {(param0: PromiseSettledResult<Forum>) => param0 is PromiseFulfilledResult<Forum>} */ (
+        ({ status }) => status === 'fulfilled'
+      )
     )
-    throw new Error(
-      `Invalid channel type: ${invalids
-        .map(({ setting }) => setting.id)
-        .join(', ')}`
-    )
+  ) {
+    const errors = result
+      .filter(
+        /** @type {(param0: PromiseSettledResult<unknown>) => param0 is PromiseRejectedResult} */
+        (({ status }) => status === 'rejected')
+      )
+      .map(({ reason }) => reason)
+    throw new Error(errors.join(', '))
   }
+
+  return result.map(({ value }) => value)
+}
+
+/**
+ * @param {Forum[]} forums
+ */
+async function watch(forums) {
+  const logger = timerLogger.createChild('Interval')
 
   for await (const _ of setInterval(600000, null, { ref: false })) {
     await onInterval(logger.createChild(new Date().toISOString()), forums)
