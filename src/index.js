@@ -69,9 +69,10 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
 
 client.on(Events.MessageReactionAdd, async reaction => {
   const logger = eventLogger.createChild('messageReactionAdd')
-  const setting = forumChannelSettings.find(
-    it => it.id === reaction.message.channelId
-  )
+
+  if (!reaction.message.inGuild()) return
+  const { channel } = reaction.message
+  const setting = forumChannelSettings.find(it => it.id === channel.parentId)
   if (!setting) return
 
   const message = await reaction.message.fetch()
