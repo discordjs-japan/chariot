@@ -12,7 +12,7 @@ import { ChannelType } from 'discord.js'
  * @param {AnyThreadChannel} thread
  * @param {ForumChannelSetting} setting
  */
-export async function onForumThreadCreate(logger, thread, setting) {
+export async function handleCreateNotify(logger, thread, setting) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
   if (!thread.ownerId) return
 

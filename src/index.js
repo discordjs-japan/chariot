@@ -2,8 +2,8 @@
 import { setInterval } from 'node:timers/promises'
 import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
 import { Logger } from './logger.js'
-import { onForumThreadCreate } from './onForumThreadCreate.js'
-import { onForumThreadReopen } from './onForumThreadReopen.js'
+import { handleCreateNotify } from './handleCreateNotify.js'
+import { handleReopenNotify } from './handleReopenNotify.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
 import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
@@ -47,7 +47,7 @@ client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   if (!setting) return
 
   if (newlyCreated)
-    onForumThreadCreate(
+    handleCreateNotify(
       logger.createChild('onForumThreadCreate'),
       thread,
       setting
@@ -60,7 +60,7 @@ client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
   if (!setting) return
 
   if (oldThread.archived && !newThread.archived)
-    onForumThreadReopen(
+    await handleReopenNotify(
       logger.createChild('onForumThreadReopen'),
       newThread,
       setting
