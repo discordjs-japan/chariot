@@ -1,5 +1,6 @@
 // @ts-check
-import { ChannelType, MessageFlags } from 'discord.js'
+import { MessageFlags } from 'discord.js'
+import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
@@ -14,18 +15,9 @@ import { ChannelType, MessageFlags } from 'discord.js'
  * @param {Message | null} [starter]
  */
 export async function handleReactionClose(logger, setting, thread, starter) {
-  if (thread.parent?.type !== ChannelType.GuildForum) return
-
-  starter ??= await thread.fetchStarterMessage().catch(reason => {
-    if (reason.code === 10008) return null
-    else throw reason
-  })
+  starter ??= await fetchStarterMessageOrNull(thread)
   if (!starter) {
-    await thread.setLocked()
-    logger.info(
-      `"${thread.parent.name}" (${thread.parentId}) は最初の投稿が削除されたためロックします。`,
-      `locked "${thread.parent.name}" (${thread.parentId}) because the starter post was deleted.`
-    )
+    await lockThreadForNoStarter(logger, thread)
     return
   }
 

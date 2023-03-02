@@ -11,7 +11,7 @@ import { AuditLogEvent } from 'discord.js'
  * @param {AnyThreadChannel} thread
  * @param {ForumChannelSetting} setting
  */
-export async function onForumThreadReopen(logger, thread, setting) {
+export async function handleReopenNotify(logger, thread, setting) {
   logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
 
   const guild = thread.guild
