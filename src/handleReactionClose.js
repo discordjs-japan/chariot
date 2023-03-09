@@ -31,9 +31,8 @@ export async function handleReactionClose(logger, setting, thread, starter) {
   if (!bad || bad.count < 3) return
 
   // must be before bad.remove()
-  const usersString = bad.users.cache
-    .map(user => `${user.tag} (${user.id})`)
-    .join(', ')
+  const users = await bad.users.fetch()
+  const usersString = users.map(user => `${user.tag} (${user.id})`).join(', ')
 
   // 👎 * 3~  + ⚠️ * 0 -> ⚠️ つけて 👎 消してclose
   // 👎 * 3~  + ⚠️ * 1 -> ❌ つけてclose
