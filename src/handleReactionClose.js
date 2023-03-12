@@ -21,6 +21,8 @@ export async function handleReactionClose(logger, setting, thread, starter) {
     return
   }
 
+  if (thread.locked) return
+
   const [bad, warning] = await Promise.all([
     starter.reactions.resolve('👎')?.fetch(),
     starter.reactions.resolve('⚠️')?.fetch(),
