@@ -95,10 +95,12 @@ client.on(Events.MessageDelete, async message => {
 
   if (!message.channel.isThread()) return
 
-  await lockThreadForNoStarter(
-    logger.createChild('onForumStarterDelete'),
-    message.channel
-  )
+  if (message.channelId === message.id) {
+    await lockThreadForNoStarter(
+      logger.createChild('onForumStarterDelete'),
+      message.channel
+    )
+  }
 })
 
 await client.login()
