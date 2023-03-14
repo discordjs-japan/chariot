@@ -46,10 +46,10 @@ export async function handleReactionClose(logger, setting, thread, starter) {
       flags: MessageFlags.SuppressEmbeds,
     }),
   ])
-  await thread[warning?.me ? 'setLocked' : 'setArchived'](
-    true,
-    `:-1: by ${usersString}`
-  )
+
+  if (warning?.me) await thread.setLocked()
+  await thread.setArchived(true, `:-1: by ${usersString}`)
+
   logger.info(
     `${warning?.me ? 'locked' : 'closed'} "${thread.name}" (${
       thread.id

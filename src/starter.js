@@ -19,12 +19,11 @@ export async function fetchStarterMessageOrNull(thread) {
 /**
  * @param {Logger} logger
  * @param {AnyThreadChannel} thread
- * @returns
  */
 export async function lockThreadForNoStarter(logger, thread) {
   await thread.setLocked()
+  await thread.setArchived()
   logger.info(
     `locked "${thread.parent?.name}" (${thread.parentId}) because the starter post was deleted.`
   )
-  return
 }
