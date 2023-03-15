@@ -37,6 +37,7 @@ async function onIntervalForForum(logger, { channel, setting }) {
   const inactiveDurationDay = 2
   await Promise.all(
     activeThreads
+      .filter(thread => !thread.locked)
       .map(thread => [
         handleInactiveClose(
           logger.createChild(`handleInactiveClose:${thread.id}`),

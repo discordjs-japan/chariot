@@ -8,7 +8,7 @@ import { AuditLogEvent } from 'discord.js'
 
 /**
  * @param {Logger} logger
- * @param {AnyThreadChannel} thread
+ * @param {AnyThreadChannel} thread ロックされていないスレッド
  * @param {ForumChannelSetting} setting
  */
 export async function handleReopenNotify(logger, thread, setting) {

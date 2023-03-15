@@ -11,7 +11,7 @@ import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 /**
  * @param {Logger} logger
  * @param {ForumChannelSetting} setting
- * @param {AnyThreadChannel} thread
+ * @param {AnyThreadChannel} thread ロックされていないスレッド
  * @param {Message | null} [starter]
  */
 export async function handleReactionClose(logger, setting, thread, starter) {
@@ -20,8 +20,6 @@ export async function handleReactionClose(logger, setting, thread, starter) {
     await lockThreadForNoStarter(logger, thread)
     return
   }
-
-  if (thread.locked) return
 
   const [bad, warning] = await Promise.all([
     starter.reactions.resolve('👎')?.fetch(),
