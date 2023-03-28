@@ -40,7 +40,12 @@ export const forumChannelSettings = [
       ].join('\n'),
     onReopen: by =>
       by
-        ? `${userMention(by)}がスレッドを再開しました。`
+        ? [
+            `${userMention(by)}がスレッドを再開しました。`,
+            `${userMention(
+              by
+            )}さんは、意図せず再開した場合は下のボタンを押してください。`,
+          ].join('\n')
         : 'スレッドが再開されました。',
     onStale: (ownerId, days) =>
       [
