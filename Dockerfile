@@ -9,10 +9,9 @@ RUN npm ci --omit=dev
 
 FROM gcr.io/distroless/nodejs18-debian11:nonroot
 
-USER nonroot
 WORKDIR /app
 
-COPY --chown=nonroot:nonroot --from=deps /app/ .
-COPY --chown=nonroot:nonroot ./src ./src
+COPY --from=deps /app/ .
+COPY ./src ./src
 
 CMD [ "./src/index.js" ]
