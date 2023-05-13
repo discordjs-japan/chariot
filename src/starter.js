@@ -19,8 +19,10 @@ export async function fetchStarterMessageOrNull(thread) {
 /**
  * @param {Logger} logger
  * @param {AnyThreadChannel} thread
+ * @param {import('./forum.js').ForumChannelSetting} setting
  */
-export async function lockThreadForNoStarter(logger, thread) {
+export async function lockThreadForNoStarter(logger, thread, setting) {
+  thread.send(setting.onNoStarter)
   await thread.setLocked()
   await thread.setArchived()
   logger.info(

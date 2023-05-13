@@ -12,6 +12,7 @@ import { bold, channelMention, underscore, userMention } from 'discord.js'
  * @property {(ownerId: string | null | undefined, days: number) => string} onStale
  * @property {(ownerId: string) => string} onClose
  * @property {(ownerId: string) => string} onLock
+ * @property {string} onNoStarter
  */
 
 /**
@@ -84,5 +85,7 @@ export const forumChannelSettings = [
         '',
         '❌ 今後この投稿はロックされ、内容の追記・編集はできません。',
       ].join('\n'),
+    onNoStarter:
+      '投稿内容（先頭のメッセージ）が削除されたため、このスレッドをロックします。',
   },
 ]

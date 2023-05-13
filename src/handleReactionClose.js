@@ -17,7 +17,7 @@ import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 export async function handleReactionClose(logger, setting, thread, starter) {
   starter ??= await fetchStarterMessageOrNull(thread)
   if (!starter) {
-    await lockThreadForNoStarter(logger, thread)
+    await lockThreadForNoStarter(logger, thread, setting)
     return
   }
 

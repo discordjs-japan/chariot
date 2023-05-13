@@ -90,15 +90,18 @@ client.on(Events.MessageDelete, async message => {
   const logger = eventLogger.createChild('messageDelete')
 
   if (!message.inGuild()) return
-  if (!forumChannelSettings.some(it => it.id === message.channel.parentId))
-    return
 
+  const setting = forumChannelSettings.find(
+    it => it.id === message.channel.parentId
+  )
+
+  if (!setting) return
   if (!message.channel.isThread()) return
-
   if (message.channelId === message.id) {
     await lockThreadForNoStarter(
       logger.createChild('onForumStarterDelete'),
-      message.channel
+      message.channel,
+      setting
     )
   }
 })
