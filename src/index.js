@@ -1,6 +1,12 @@
 // @ts-check
 import { setInterval } from 'node:timers/promises'
-import { ChannelType, Client, GatewayIntentBits, Events } from 'discord.js'
+import {
+  ChannelType,
+  Client,
+  GatewayIntentBits,
+  Events,
+  AuditLogEvent,
+} from 'discord.js'
 import { Logger } from './logger.js'
 import { handleCreateNotify } from './handleCreateNotify.js'
 import { handleReopenNotify } from './handleReopenNotify.js'
@@ -24,6 +30,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildModeration,
   ],
 })
 
@@ -54,14 +61,24 @@ client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
     )
 })
 
-client.on(Events.ThreadUpdate, async (oldThread, newThread) => {
-  const logger = eventLogger.createChild('threadUpdate')
-  const setting = forumChannelSettings.find(it => it.id === newThread.parentId)
+client.on(Events.GuildAuditLogEntryCreate, async (auditLogEntry, guild) => {
+  const logger = eventLogger.createChild('guildAuditLogEntryCreate')
+  if (
+    auditLogEntry.action !== AuditLogEvent.ThreadUpdate ||
+    auditLogEntry.targetId === null
+  )
+    return
+  const newThread = await guild.channels.fetch(auditLogEntry.targetId)
+  if (newThread?.type !== ChannelType.PublicThread) return
+  const setting = forumChannelSettings.find(it => it.id === newThread?.parentId)
   if (!setting) return
 
-  if (oldThread.archived && !newThread.archived)
+  if (
+    auditLogEntry.changes.some(it => it.key === 'archived' && it.old && !it.new)
+  )
     await handleReopenNotify(
       logger.createChild('onForumThreadReopen'),
+      auditLogEntry,
       newThread,
       setting
     )
