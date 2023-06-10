@@ -1,5 +1,5 @@
 // @ts-check
-import { ButtonStyle, ComponentType, GuildAuditLogsEntry } from 'discord.js'
+import { ButtonStyle, ComponentType } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').GuildAuditLogsEntry} GuildAuditLogsEntry
