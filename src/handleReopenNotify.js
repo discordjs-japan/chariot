@@ -2,6 +2,7 @@
 import { ButtonStyle, ComponentType, GuildAuditLogsEntry } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
+ * @typedef {import('discord.js').GuildAuditLogsEntry} GuildAuditLogsEntry
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('discord.js').MessageActionRowComponentData} MessageActionRowComponentData
