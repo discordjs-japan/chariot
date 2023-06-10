@@ -39,7 +39,7 @@ export async function handleReopenNotify(logger, thread, setting) {
       })
       .catch(() => null)
     if (interaction) {
-      await interaction.deleteReply()
+      await message.delete()
       await thread.setArchived()
     }
   } else {
