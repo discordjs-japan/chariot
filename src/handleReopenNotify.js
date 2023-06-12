@@ -17,6 +17,10 @@ import { ButtonStyle, ComponentType } from 'discord.js'
  */
 export async function handleReopenNotify(logger, entry, thread, setting) {
   logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
+  if (!entry.executorId) {
+    await thread.send(setting.onReopen())
+    return
+  }
   const message = await thread.send({
     content: setting.onReopen(entry.executorId),
     components,
