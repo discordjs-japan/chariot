@@ -9,6 +9,7 @@ import { bold, channelMention, underscore, userMention } from 'discord.js'
  * @property {string} id
  * @property {(ownerId: string | null | undefined) => string} onCreate
  * @property {(by?: string | null | undefined) => string} onReopen
+ * @property {(by: string) => string} onReopenButtonRejected
  * @property {(ownerId: string | null | undefined, days: number) => string} onStale
  * @property {(ownerId: string) => string} onClose
  * @property {(ownerId: string) => string} onLock
@@ -48,6 +49,8 @@ export const forumChannelSettings = [
             )}さんは、意図せず再開した場合は下のボタンを押してください。`,
           ].join('\n')
         : 'スレッドが再開されました。',
+    onReopenButtonRejected: by =>
+      `${userMention(by)}がスレッドを再開しました。`,
     onStale: (ownerId, days) =>
       [
         ownerId && userMention(ownerId),

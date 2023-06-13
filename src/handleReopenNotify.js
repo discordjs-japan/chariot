@@ -1,5 +1,10 @@
 // @ts-check
-import { ButtonStyle, ComponentType } from 'discord.js'
+import {
+  ButtonStyle,
+  ComponentType,
+  DiscordjsError,
+  DiscordjsErrorCodes,
+} from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').GuildAuditLogsEntry} GuildAuditLogsEntry
@@ -25,15 +30,27 @@ export async function handleReopenNotify(logger, entry, thread, setting) {
     content: setting.onReopen(entry.executorId),
     components,
   })
-  const interaction = await message
-    .awaitMessageComponent({
+  try {
+    const interaction = await message.awaitMessageComponent({
       filter: i => i.user.id === entry.executorId,
       time: 1000 * 60 * 5,
     })
-    .catch(() => null)
-  if (interaction) {
-    await message.delete()
-    await thread.setArchived()
+    if (interaction) {
+      await message.delete()
+      await thread.setArchived()
+    }
+  } catch (error) {
+    if (
+      error instanceof DiscordjsError &&
+      error.code === DiscordjsErrorCodes.InteractionCollectorError
+    ) {
+      await message.edit({
+        content: setting.onReopenButtonRejected(entry.executorId),
+        components: [],
+      })
+    } else {
+      throw error
+    }
   }
 }
 
