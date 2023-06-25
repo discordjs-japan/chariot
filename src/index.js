@@ -14,6 +14,7 @@ import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
 import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 import { handleReactionClose } from './handleReactionClose.js'
+import { handleLock } from './handleLock.js'
 /**
  * @typedef {import('discord.js').Channel} Channel
  * @typedef {import('discord.js').ForumChannel} ForumChannel
@@ -81,6 +82,14 @@ client.on(Events.GuildAuditLogEntryCreate, async (auditLogEntry, guild) => {
       auditLogEntry,
       newThread,
       setting
+    )
+  if (
+    auditLogEntry.changes.some(it => it.key === 'locked' && !it.old && it.new)
+  )
+    await handleLock(
+      logger.createChild('onForumThreadLock'),
+      auditLogEntry,
+      newThread
     )
 })
 
