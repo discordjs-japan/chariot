@@ -1,4 +1,3 @@
-// @ts-check
 import { handleInactiveClose } from './handleInactiveClose.js'
 import { handleReactionClose } from './handleReactionClose.js'
 /**

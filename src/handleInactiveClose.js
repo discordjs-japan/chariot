@@ -1,4 +1,3 @@
-// @ts-check
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
