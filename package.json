@@ -7,7 +7,9 @@
   "license": "MIT",
   "scripts": {
     "format": "prettier --write .",
-    "check": "prettier --check ."
+    "check": "run-p check:*",
+    "check:format": "prettier --check .",
+    "check:types": "tsc -p jsconfig.json"
   },
   "dependencies": {
     "discord.js": "^14.11.0"
