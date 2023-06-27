@@ -1,4 +1,3 @@
-// @ts-check
 import { inspect } from 'node:util'
 
 /**

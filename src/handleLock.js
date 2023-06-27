@@ -1,4 +1,3 @@
-// @ts-check
 import { PermissionFlagsBits } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger

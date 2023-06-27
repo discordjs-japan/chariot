@@ -1,4 +1,3 @@
-// @ts-check
 import { bold, channelMention, underscore, userMention } from 'discord.js'
 /**
  * @typedef {import('discord.js').ForumChannel} ForumChannel

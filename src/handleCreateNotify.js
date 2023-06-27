@@ -1,4 +1,3 @@
-// @ts-check
 import { ChannelType } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger

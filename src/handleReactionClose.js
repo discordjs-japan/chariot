@@ -1,4 +1,3 @@
-// @ts-check
 import { MessageFlags } from 'discord.js'
 import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 /**

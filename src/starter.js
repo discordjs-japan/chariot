@@ -1,4 +1,3 @@
-// @ts-check
 import { DiscordAPIError } from 'discord.js'
 
 /**

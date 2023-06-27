@@ -1,4 +1,3 @@
-// @ts-check
 import { setInterval } from 'node:timers/promises'
 import {
   ChannelType,
