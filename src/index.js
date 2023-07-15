@@ -40,7 +40,9 @@ client.once(Events.ClientReady, async client => {
   logger.info(`Logged in ${client.user.tag}`)
 
   try {
-    const forums = await fetchForumsAndStarters()
+    const forums = await fetchForumsAndStarters(
+      logger.createChild('fetchForumsAndStarters')
+    )
     await watch(forums)
   } catch (reason) {
     logger.error(reason)
@@ -134,10 +136,11 @@ client.on(Events.MessageDelete, async message => {
 await client.login()
 
 /**
+ * @param {Logger} logger
  * @returns {Promise<Forum[]>}
  */
-async function fetchForumsAndStarters() {
-  const result = await Promise.allSettled(
+async function fetchForumsAndStarters(logger) {
+  return await Promise.all(
     forumChannelSettings.map(async setting => {
       const channel = await client.channels.fetch(setting.id)
       if (channel?.type !== ChannelType.GuildForum)
@@ -147,27 +150,13 @@ async function fetchForumsAndStarters() {
       const { threads: activeThreads } = await channel.threads.fetchActive()
       await Promise.all(activeThreads.map(fetchStarterMessageOrNull))
 
+      logger.info(
+        `Fetched ${activeThreads.size} active threads in ${channel.name}`
+      )
+
       return { channel, setting }
     })
   )
-
-  if (
-    !result.every(
-      /** @type {(param0: PromiseSettledResult<Forum>) => param0 is PromiseFulfilledResult<Forum>} */ (
-        ({ status }) => status === 'fulfilled'
-      )
-    )
-  ) {
-    const errors = result
-      .filter(
-        /** @type {(param0: PromiseSettledResult<unknown>) => param0 is PromiseRejectedResult} */
-        (({ status }) => status === 'rejected')
-      )
-      .map(({ reason }) => reason)
-    throw new Error(errors.join(', '))
-  }
-
-  return result.map(({ value }) => value)
 }
 
 /**
