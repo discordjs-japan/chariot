@@ -28,13 +28,13 @@ export const forumChannelSettings = [
     onCreate: ownerId =>
       [
         bold('もう一度確認してみよう:'),
-        `• https://scrapbox.io/discordjs-japan/質問のガイドライン`,
+        `• https://discordjs-japan.org/guidelines/questioner`,
         `• フォーラムチャンネルに設定された${bold('Post Guideline')}`,
         '',
         `質問に回答する方々は、${bold(
           '回答のガイドライン'
         )}を確認するようにしてください。`,
-        '• https://scrapbox.io/discordjs-japan/回答のガイドライン',
+        '• https://discordjs-japan.org/guidelines/respondent',
         '',
         ownerId && userMention(ownerId),
         '問題が解決した場合、スレッドを閉じるようお願いいたします。',
@@ -64,7 +64,7 @@ export const forumChannelSettings = [
         'この質問は複数のコミュニティメンバーからガイドラインに沿っていないと判断されたため、クローズされます。',
         '',
         '質問のガイドラインを再度熟読してください。',
-        'https://scrapbox.io/discordjs-japan/質問のガイドライン',
+        'https://discordjs-japan.org/guidelines/questioner',
         '',
         bold('◆特に確認すべき事項'),
         underscore('・Discord.jsに関する内容になっていますか？'),
