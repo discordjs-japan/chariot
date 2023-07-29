@@ -61,7 +61,7 @@ export const forumChannelSettings = [
     onClose(ownerId) {
       return [
         userMention(ownerId),
-        'この質問は複数のコミュニティメンバーからガイドラインに沿っていないと判断されたため、クローズします。',
+        'この質問は複数のコミュニティメンバーからガイドラインに沿っていないと判断されたため、クローズされます。',
         '',
         '質問のガイドラインを再度熟読してください。',
         'https://scrapbox.io/discordjs-japan/質問のガイドライン',
