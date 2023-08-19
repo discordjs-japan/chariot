@@ -8,7 +8,7 @@ on:
     branches: ['main']
 
 env:
-  IMAGE_NAME: guideline-bot
+  IMAGE_NAME: chariot
 
 permissions:
   contents: read
@@ -33,7 +33,7 @@ jobs:
         uses: docker/metadata-action@v4
         id: metadata
         with:
-          images: ghcr.io/inkohx/${{ env.IMAGE_NAME }}
+          images: ghcr.io/discordjs-japan/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
