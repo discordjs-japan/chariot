@@ -45,11 +45,11 @@ export async function handleOwnerClose(logger, interaction, setting) {
   )
     return
 
-  await thread.setArchived(true, 'Owner used Close button')
-
   await interaction.reply({
     content: setting.onOwnerClose,
   })
+
+  await thread.setArchived(true, 'Owner used Close button')
 
   logger.info(
     `"${thread.name}" (${thread.id}) has been closed because the owner used Close button.`
