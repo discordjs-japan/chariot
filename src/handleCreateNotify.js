@@ -45,6 +45,8 @@ export async function handleOwnerClose(logger, interaction, setting) {
   )
     return
 
+  if (interaction.user.id !== thread.ownerId) return
+
   await interaction.reply({
     content: setting.onOwnerClose,
   })
