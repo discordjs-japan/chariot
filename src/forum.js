@@ -39,7 +39,7 @@ export const forumChannelSettings = [
         '',
         ownerId && userMention(ownerId),
         '問題が解決した場合、スレッドを閉じるようお願いいたします。',
-        'なおスレッドを閉じるには，下のボタンを押してください。',
+        'なお、スレッドを閉じるには、下のボタンを押してください。',
       ].join('\n'),
     onReopen: by =>
       by
