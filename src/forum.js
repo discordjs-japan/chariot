@@ -38,7 +38,8 @@ export const forumChannelSettings = [
         '• https://discordjs-japan.org/guidelines/respondent',
         '',
         ownerId && userMention(ownerId),
-        '問題が解決した場合、下のボタンを押してスレッドを閉じるようお願いいたします。',
+        '問題が解決した場合、スレッドを閉じるようお願いいたします。',
+        'なおスレッドを閉じるには，下のボタンを押してください。',
       ].join('\n'),
     onReopen: by =>
       by
