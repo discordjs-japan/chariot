@@ -21,6 +21,7 @@ import {
  */
 export async function handleReopenNotify(logger, entry, thread, setting) {
   logger.info(`"${thread.name}" (${thread.id}) has been reopened.`)
+  if (entry.executorId === thread.client.user.id) return
   if (!entry.executorId) {
     await thread.send(setting.onReopen())
     return
@@ -43,6 +44,12 @@ export async function handleReopenNotify(logger, entry, thread, setting) {
       error instanceof DiscordjsError &&
       error.code === DiscordjsErrorCodes.InteractionCollectorError
     ) {
+      if (thread.archived) {
+        await thread.setArchived(false)
+        await message.delete()
+        await thread.setArchived()
+        return
+      }
       await message.edit({
         content: setting.onReopenButtonRejected(entry.executorId),
         components: [],
