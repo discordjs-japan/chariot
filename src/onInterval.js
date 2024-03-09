@@ -29,9 +29,8 @@ export async function onInterval(logger, forums) {
  * @param {Forum} param1
  */
 async function onIntervalForForum(logger, { channel, setting }) {
-  const guildActiveThreads = await channel.guild.channels.fetchActiveThreads(
-    false
-  )
+  const guildActiveThreads =
+    await channel.guild.channels.fetchActiveThreads(false)
   const activeThreads = guildActiveThreads.threads.filter(
     thread => thread.parentId === channel.id
   )
