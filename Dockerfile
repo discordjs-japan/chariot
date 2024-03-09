@@ -1,4 +1,4 @@
-FROM node:18 as deps
+FROM node:20 as deps
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ COPY ./package*.json .
 RUN npm ci --omit=dev
 
 
-FROM gcr.io/distroless/nodejs18-debian11:nonroot
+FROM gcr.io/distroless/nodejs20-debian11:nonroot
 
 WORKDIR /app
 
