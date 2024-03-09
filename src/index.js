@@ -7,7 +7,7 @@ import {
   AuditLogEvent,
 } from 'discord.js'
 import { Logger } from './logger.js'
-import { handleCreateNotify } from './handleCreateNotify.js'
+import { handleCreateNotify, handleOwnerClose } from './handleCreateNotify.js'
 import { handleReopenNotify } from './handleReopenNotify.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
@@ -48,6 +48,22 @@ client.once(Events.ClientReady, async client => {
     logger.error(reason)
     process.exit(1)
   }
+})
+
+client.on(Events.InteractionCreate, async interaction => {
+  const logger = eventLogger.createChild('interactionCreate')
+
+  const setting = forumChannelSettings.find(
+    it =>
+      interaction.channel?.isThread() && it.id === interaction.channel.parentId
+  )
+  if (!setting) return
+
+  handleOwnerClose(
+    logger.createChild('onOwnerCloseButton'),
+    interaction,
+    setting
+  )
 })
 
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => {

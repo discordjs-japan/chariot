@@ -13,6 +13,7 @@ import { bold, channelMention, underscore, userMention } from 'discord.js'
  * @property {(ownerId: string) => string} onClose
  * @property {(ownerId: string) => string} onLock
  * @property {string} onNoStarter
+ * @property {string} onOwnerClose
  */
 
 /**
@@ -38,6 +39,7 @@ export const forumChannelSettings = [
         '',
         ownerId && userMention(ownerId),
         '問題が解決した場合、スレッドを閉じるようお願いいたします。',
+        'なお、スレッドを閉じるには、下のボタンを押してください。',
       ].join('\n'),
     onReopen: by =>
       by
@@ -89,5 +91,7 @@ export const forumChannelSettings = [
       ].join('\n'),
     onNoStarter:
       '投稿内容（先頭のメッセージ）が削除されたため、このスレッドをロックします。',
+    onOwnerClose:
+      '質問者が「クローズ」ボタンを押したため、このスレッドをクローズします。',
   },
 ]
