@@ -2,7 +2,7 @@ import { ButtonStyle, ChannelType, ComponentType } from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
- * @typedef {import('discord.js').ButtonInteraction} ButtonInteraction
+ * @typedef {import('discord.js').Interaction} Interaction
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('discord.js').MessageActionRowComponentData} MessageActionRowComponentData
  * @typedef {import('discord.js').ActionRowData<MessageActionRowComponentData>} ActionRowData
@@ -31,10 +31,11 @@ export async function handleCreateNotify(logger, thread, setting) {
 
 /**
  * @param {Logger} logger
- * @param {ButtonInteraction} interaction
+ * @param {Interaction} interaction
  * @param {ForumChannelSetting} setting
  */
 export async function handleOwnerClose(logger, interaction, setting) {
+  if (!interaction.isButton()) return
   if (interaction.customId !== components[0].components[0].customId) return
 
   const message = interaction.message

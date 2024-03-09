@@ -59,8 +59,6 @@ client.on(Events.InteractionCreate, async interaction => {
   )
   if (!setting) return
 
-  if (!interaction.isButton()) return
-
   handleOwnerClose(
     logger.createChild('onOwnerCloseButton'),
     interaction,
