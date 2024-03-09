@@ -53,31 +53,19 @@ client.once(Events.ClientReady, async client => {
 client.on(Events.InteractionCreate, async interaction => {
   const logger = eventLogger.createChild('interactionCreate')
 
-  if (
-    !interaction.channel ||
-    interaction.channel.type !== ChannelType.PublicThread ||
-    interaction.channel.parent?.type !== ChannelType.GuildForum
+  const setting = forumChannelSettings.find(
+    it =>
+      interaction.channel?.isThread() && it.id === interaction.channel.parentId
   )
-    return
-
-  const thread = interaction.channel
-  const setting = forumChannelSettings.find(it => it.id === thread.parentId)
   if (!setting) return
 
   if (!interaction.isButton()) return
 
-  switch (interaction.customId) {
-    case 'owner_close':
-      handleOwnerClose(
-        logger.createChild('onOwnerCloseButton'),
-        interaction,
-        setting
-      )
-      break
-
-    default:
-      break
-  }
+  handleOwnerClose(
+    logger.createChild('onOwnerCloseButton'),
+    interaction,
+    setting
+  )
 })
 
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => {

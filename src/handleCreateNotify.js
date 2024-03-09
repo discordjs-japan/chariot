@@ -39,10 +39,7 @@ export async function handleOwnerClose(logger, interaction, setting) {
 
   const message = interaction.message
   const thread = message.channel
-  if (
-    thread.type !== ChannelType.PublicThread ||
-    thread.parent?.type !== ChannelType.GuildForum
-  )
+  if (!thread.isThread() || thread.parent?.type !== ChannelType.GuildForum)
     return
 
   if (interaction.user.id !== thread.ownerId) return
