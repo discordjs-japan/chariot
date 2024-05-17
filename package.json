@@ -15,7 +15,7 @@
     "discord.js": "^14.14.1"
   },
   "devDependencies": {
-    "npm-run-all2": "^6.1.2",
+    "npm-run-all2": "^6.2.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5"
   }
