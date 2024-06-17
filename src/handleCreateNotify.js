@@ -11,9 +11,9 @@ import { ButtonStyle, ChannelType, ComponentType } from 'discord.js'
 
 /**
  * Whether {@link handleCreateNotify} has handled the thread/message.
- * @type {Set<string>}
+ * @type {WeakSet<AnyThreadChannel>}
  */
-const handled = new Set()
+const handled = new WeakSet()
 
 /**
  * @param {Logger} logger
@@ -22,8 +22,8 @@ const handled = new Set()
  * @param {ForumChannelSetting} setting
  */
 export async function handleCreateNotify(logger, thread, _starter, setting) {
-  if (handled.has(thread.id)) return
-  handled.add(thread.id)
+  if (handled.has(thread)) return
+  handled.add(thread)
 
   if (thread.parent?.type !== ChannelType.GuildForum) return
   if (!thread.ownerId) return
