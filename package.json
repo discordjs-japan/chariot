@@ -1,7 +1,7 @@
 {
-  "name": "guideline-bot",
+  "name": "chariot",
   "version": "3.0.1",
-  "repository": "https://github.com/InkoHX/guideline-bot.git",
+  "repository": "https://github.com/discordjs-japan/chariot.git",
   "author": "InkoHX <me@inkohx.dev>",
   "type": "module",
   "license": "MIT",
