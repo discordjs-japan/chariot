@@ -3,17 +3,28 @@ import { ButtonStyle, ChannelType, ComponentType } from 'discord.js'
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
  * @typedef {import('discord.js').Interaction} Interaction
+ * @typedef {import('discord.js').Message} Message
  * @typedef {import('./forum.js').ForumChannelSetting} ForumChannelSetting
  * @typedef {import('discord.js').MessageActionRowComponentData} MessageActionRowComponentData
  * @typedef {import('discord.js').ActionRowData<MessageActionRowComponentData>} ActionRowData
  */
 
 /**
+ * Whether {@link handleCreateNotify} has handled the thread/message.
+ * @type {Set<string>}
+ */
+const handled = new Set()
+
+/**
  * @param {Logger} logger
  * @param {AnyThreadChannel} thread
+ * @param {Message} _starter to make sure the starter message exists
  * @param {ForumChannelSetting} setting
  */
-export async function handleCreateNotify(logger, thread, setting) {
+export async function handleCreateNotify(logger, thread, _starter, setting) {
+  if (handled.has(thread.id)) return
+  handled.add(thread.id)
+
   if (thread.parent?.type !== ChannelType.GuildForum) return
   if (!thread.ownerId) return
 
