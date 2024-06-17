@@ -11,7 +11,11 @@ import { handleCreateNotify, handleOwnerClose } from './handleCreateNotify.js'
 import { handleReopenNotify } from './handleReopenNotify.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
-import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
+import {
+  fetchStarterMessageOrNull,
+  getCachedStarterMessage,
+  lockThreadForNoStarter,
+} from './starter.js'
 import { handleReactionClose } from './handleReactionClose.js'
 import { handleLock } from './handleLock.js'
 /**
@@ -71,12 +75,20 @@ client.on(Events.ThreadCreate, async (thread, newlyCreated) => {
   const setting = forumChannelSettings.find(it => it.id === thread.parentId)
   if (!setting) return
 
-  if (newlyCreated)
-    handleCreateNotify(
-      logger.createChild('onForumThreadCreate'),
-      thread,
-      setting
-    )
+  if (!newlyCreated) return
+
+  // check for the starter message
+  const starter = thread.messages.cache.first()
+  if (!starter || starter.id !== thread.id) {
+    // if the starter message is not found, wait for it
+    await thread.awaitMessages({
+      max: 1,
+      time: 60000,
+      filter: m => m.id === thread.id,
+    })
+  }
+
+  handleCreateNotify(logger.createChild('onForumThreadCreate'), thread, setting)
 })
 
 client.on(Events.GuildAuditLogEntryCreate, async (auditLogEntry, guild) => {
