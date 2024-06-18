@@ -13,7 +13,6 @@ import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
 import {
   fetchStarterMessageOrNull,
-  getCachedStarterMessage,
   lockThreadForNoStarter,
 } from './starter.js'
 import { handleReactionClose } from './handleReactionClose.js'
