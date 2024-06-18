@@ -11,10 +11,7 @@ import { handleCreateNotify, handleOwnerClose } from './handleCreateNotify.js'
 import { handleReopenNotify } from './handleReopenNotify.js'
 import { onInterval } from './onInterval.js'
 import { forumChannelSettings } from './forum.js'
-import {
-  fetchStarterMessageOrNull,
-  lockThreadForNoStarter,
-} from './starter.js'
+import { fetchStarterMessageOrNull, lockThreadForNoStarter } from './starter.js'
 import { handleReactionClose } from './handleReactionClose.js'
 import { handleLock } from './handleLock.js'
 /**
