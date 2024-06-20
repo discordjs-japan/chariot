@@ -1,4 +1,4 @@
-import { DiscordAPIError } from 'discord.js'
+import { DiscordAPIError, ThreadOnlyChannel } from 'discord.js'
 
 /**
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
@@ -13,6 +13,24 @@ export async function fetchStarterMessageOrNull(thread) {
     if (reason instanceof DiscordAPIError && reason.code === 10008) return null
     else throw reason
   })
+}
+
+/**
+ * @param {AnyThreadChannel} thread
+ */
+export async function getOrWaitForStarterMessage(thread) {
+  const channel =
+    thread.parent instanceof ThreadOnlyChannel ? thread : thread.parent
+  const existing = channel?.messages.cache.get(thread.id)
+  if (existing) return existing
+
+  // if the starter message is not found, wait for it
+  const collected = await channel?.awaitMessages({
+    max: 1,
+    time: 60000,
+    filter: m => m.id === thread.id,
+  })
+  return collected?.get(thread.id)
 }
 
 /**
