@@ -1,4 +1,9 @@
-import { ButtonStyle, ChannelType, ComponentType } from 'discord.js'
+import {
+  ButtonStyle,
+  ChannelType,
+  ComponentType,
+  MessageFlags,
+} from 'discord.js'
 /**
  * @typedef {import('./logger.js').Logger} Logger
  * @typedef {import('discord.js').AnyThreadChannel} AnyThreadChannel
@@ -17,12 +22,11 @@ export async function handleCreateNotify(logger, thread, setting) {
   if (thread.parent?.type !== ChannelType.GuildForum) return
   if (!thread.ownerId) return
 
-  await thread
-    .send({
-      content: setting.onCreate(thread.ownerId),
-      components,
-    })
-    .then(it => it.suppressEmbeds())
+  await thread.send({
+    content: setting.onCreate(thread.ownerId),
+    components,
+    flags: MessageFlags.SuppressEmbeds,
+  })
 
   logger.info(
     `"${thread.name}" (${thread.id}) has been created in "${thread.parent.name}" (${thread.parentId}).`
